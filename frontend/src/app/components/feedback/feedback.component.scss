@@ -1,0 +1,224 @@
+// ── Layout ────────────────────────────────────────────────────────────────────
+
+.feedback-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+// ── Correctness banner ────────────────────────────────────────────────────────
+
+.correctness-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.5;
+
+  &.correct {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+
+    .correctness-icon {
+      color: #2e7d32;
+    }
+  }
+
+  &.incorrect {
+    background-color: #fce4ec;
+    color: #880e4f;
+
+    .correctness-icon {
+      color: #c62828;
+    }
+  }
+}
+
+.correctness-icon {
+  font-size: 2rem;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+}
+
+.correctness-label {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+// ── Feedback cards ────────────────────────────────────────────────────────────
+
+.feedback-card {
+  width: 100%;
+
+  mat-card-header {
+    margin-bottom: 8px;
+  }
+
+  mat-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+// Section icon colours
+.section-icon {
+  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.correct-icon  { color: #2e7d32; }
+.info-icon     { color: #1565c0; }
+.warning-icon  { color: #e65100; }
+.memory-icon   { color: #6a1b9a; }
+.it-icon       { color: #00695c; }
+
+// ── Card-specific accent borders ──────────────────────────────────────────────
+
+.correct-answer-card {
+  border-left: 4px solid #2e7d32;
+}
+
+.explanation-card {
+  border-left: 4px solid #1565c0;
+}
+
+.incorrect-explanation-card {
+  border-left: 4px solid #e65100;
+}
+
+.memory-card {
+  border-left: 4px solid #6a1b9a;
+}
+
+.it-context-card {
+  border-left: 4px solid #00695c;
+}
+
+// ── Text styles ───────────────────────────────────────────────────────────────
+
+.correct-answer-text {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0;
+  color: #1b5e20;
+}
+
+.explanation-text,
+.memory-text,
+.it-context-text {
+  font-size: 1rem;
+  line-height: 1.6; // Requirement 10.8 – minimum 1.5× font size
+  margin: 0;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+// ── Preload warning ───────────────────────────────────────────────────────────
+
+.preload-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  background-color: #fff8e1;
+  color: #f57f17;
+  font-size: 0.875rem;
+  line-height: 1.5;
+
+  mat-icon {
+    flex-shrink: 0;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// ── Actions row ───────────────────────────────────────────────────────────────
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+.next-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px; // Requirement 10.5 – minimum touch target
+  min-width: 160px;
+  font-size: 1rem;
+
+  mat-spinner {
+    display: inline-block;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// ── Responsive adjustments ────────────────────────────────────────────────────
+
+// Tablet and below
+@media (max-width: 768px) {
+  .feedback-container {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .correctness-banner {
+    padding: 12px 16px;
+    font-size: 1.125rem;
+  }
+
+  .correctness-label {
+    font-size: 1.125rem;
+  }
+}
+
+// Mobile
+@media (max-width: 480px) {
+  .feedback-container {
+    padding: 8px;
+    gap: 10px;
+  }
+
+  .correctness-banner {
+    padding: 10px 12px;
+    font-size: 1rem;
+  }
+
+  .correctness-label {
+    font-size: 1rem;
+  }
+
+  // Requirement 10.6 – minimum 16px body text on mobile
+  .explanation-text,
+  .memory-text,
+  .it-context-text,
+  .correct-answer-text {
+    font-size: 1rem; // 16px
+  }
+
+  .actions {
+    justify-content: stretch;
+  }
+
+  .next-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

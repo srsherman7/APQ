@@ -1,0 +1,86 @@
+<!-- Top navigation bar -->
+<mat-toolbar color="primary" class="app-toolbar" role="banner">
+  <!-- App title / home link -->
+  <a
+    routerLink="/questions"
+    class="app-title"
+    aria-label="AWS Exam Practice – go to practice"
+  >
+    <mat-icon aria-hidden="true">cloud</mat-icon>
+    <span class="title-text">AWS Exam Practice</span>
+  </a>
+
+  <!-- Spacer -->
+  <span class="toolbar-spacer"></span>
+
+  <!-- Navigation links (desktop) -->
+  <nav class="nav-links" aria-label="Main navigation">
+    <a
+      mat-button
+      routerLink="/questions"
+      routerLinkActive="nav-active"
+      aria-label="Practice questions"
+    >
+      <mat-icon aria-hidden="true">quiz</mat-icon>
+      Practice
+    </a>
+
+    <a
+      mat-button
+      routerLink="/dashboard"
+      routerLinkActive="nav-active"
+      aria-label="Analytics dashboard"
+    >
+      <mat-icon aria-hidden="true">bar_chart</mat-icon>
+      Dashboard
+    </a>
+
+    <a
+      mat-button
+      routerLink="/drill-mode"
+      routerLinkActive="nav-active"
+      aria-label="Drill mode"
+    >
+      <mat-icon aria-hidden="true">fitness_center</mat-icon>
+      Drill Mode
+    </a>
+
+    <a
+      mat-button
+      routerLink="/study-materials"
+      routerLinkActive="nav-active"
+      aria-label="Study materials"
+    >
+      <mat-icon aria-hidden="true">menu_book</mat-icon>
+      Study
+    </a>
+  </nav>
+
+  <!-- User menu -->
+  <button
+    mat-icon-button
+    [matMenuTriggerFor]="userMenu"
+    aria-label="User menu"
+    matTooltip="Account options"
+  >
+    <mat-icon>account_circle</mat-icon>
+  </button>
+
+  <mat-menu #userMenu="matMenu" xPosition="before">
+    <button mat-menu-item routerLink="/dashboard" aria-label="View dashboard">
+      <mat-icon aria-hidden="true">bar_chart</mat-icon>
+      <span>Dashboard</span>
+    </button>
+    <mat-divider></mat-divider>
+    <!-- Logout button (Requirement 14.15) -->
+    <button mat-menu-item (click)="logout()" aria-label="Sign out">
+      <mat-icon aria-hidden="true">logout</mat-icon>
+      <span>Sign Out</span>
+    </button>
+  </mat-menu>
+</mat-toolbar>
+
+<!-- Page content -->
+<main class="app-content" role="main">
+  <router-outlet></router-outlet>
+</main>

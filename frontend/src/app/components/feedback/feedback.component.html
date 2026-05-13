@@ -1,0 +1,118 @@
+<section class="feedback-container" aria-label="Answer feedback">
+
+  <!-- ── Correctness indicator (Requirement 3.1) ─────────────────────────── -->
+  <div
+    class="correctness-banner"
+    [class.correct]="feedback.is_correct"
+    [class.incorrect]="!feedback.is_correct"
+    role="status"
+    aria-live="polite"
+  >
+    <mat-icon class="correctness-icon" aria-hidden="true">
+      {{ feedback.is_correct ? 'check_circle' : 'cancel' }}
+    </mat-icon>
+    <span class="correctness-label">
+      {{ feedback.is_correct ? 'Correct!' : 'Incorrect' }}
+    </span>
+  </div>
+
+  <!-- ── Correct answer (Requirement 3.2) ────────────────────────────────── -->
+  <mat-card class="feedback-card correct-answer-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar class="section-icon correct-icon" aria-hidden="true">
+        task_alt
+      </mat-icon>
+      <mat-card-title>Correct Answer</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="correct-answer-text">{{ feedback.correct_answer }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- ── Explanation of the correct answer (Requirement 3.3) ─────────────── -->
+  <mat-card class="feedback-card explanation-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar class="section-icon info-icon" aria-hidden="true">
+        info
+      </mat-icon>
+      <mat-card-title>Explanation</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="explanation-text">{{ feedback.explanation }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- ── Why the selected answer was wrong (Requirement 3.4) ─────────────── -->
+  @if (!feedback.is_correct && feedback.incorrect_explanation) {
+    <mat-card class="feedback-card incorrect-explanation-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="section-icon warning-icon" aria-hidden="true">
+          warning
+        </mat-icon>
+        <mat-card-title>Why Your Answer Was Incorrect</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="explanation-text">{{ feedback.incorrect_explanation }}</p>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- ── Memory technique / mnemonic (Requirement 3.5) ───────────────────── -->
+  <mat-card class="feedback-card memory-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar class="section-icon memory-icon" aria-hidden="true">
+        psychology
+      </mat-icon>
+      <mat-card-title>Memory Technique</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="memory-text">{{ feedback.memory_technique }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- ── IT context mapping (Requirements 8.1, 8.2) ──────────────────────── -->
+  @if (feedback.it_context_mapping) {
+    <mat-card class="feedback-card it-context-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="section-icon it-icon" aria-hidden="true">
+          compare_arrows
+        </mat-icon>
+        <mat-card-title>IT Professional Context</mat-card-title>
+        <mat-card-subtitle>How this maps to traditional IT concepts</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="it-context-text">{{ feedback.it_context_mapping }}</p>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- ── Preload status indicator ─────────────────────────────────────────── -->
+  @if (preloadError) {
+    <div class="preload-warning" role="alert">
+      <mat-icon aria-hidden="true">info_outline</mat-icon>
+      <span>{{ preloadError }}</span>
+    </div>
+  }
+
+  <!-- ── "Next Question" button (Requirement 3.6) ─────────────────────────── -->
+  <div class="actions">
+    <button
+      mat-raised-button
+      color="primary"
+      class="next-button"
+      (click)="onNextQuestion()"
+      [attr.aria-label]="isPreloading ? 'Loading next question…' : 'Proceed to next question'"
+    >
+      @if (isPreloading) {
+        <mat-spinner diameter="20" aria-label="Loading next question"></mat-spinner>
+        <span>Loading…</span>
+      } @else {
+        <ng-container>
+          <span>Next Question</span>
+          <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+        </ng-container>
+      }
+    </button>
+  </div>
+
+</section>

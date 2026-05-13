@@ -1,0 +1,302 @@
+<div class="dashboard-container" aria-label="Analytics Dashboard">
+
+  <!-- ── Loading state ──────────────────────────────────────────────────── -->
+  @if (isLoading) {
+    <div class="loading-overlay" role="status" aria-live="polite" aria-label="Loading analytics data">
+      <mat-spinner diameter="56"></mat-spinner>
+      <p class="loading-text">Loading your performance data…</p>
+    </div>
+  }
+
+  <!-- ── Error state ────────────────────────────────────────────────────── -->
+  @if (!isLoading && errorMessage) {
+    <mat-card class="error-card" role="alert">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon class="error-icon" aria-hidden="true">error_outline</mat-icon>
+          <div>
+            <p class="error-message">{{ errorMessage }}</p>
+            <button mat-raised-button color="primary" (click)="retry()" aria-label="Retry loading analytics">
+              <mat-icon aria-hidden="true">refresh</mat-icon>
+              Retry
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- ── No data state (Requirement 5.9) ───────────────────────────────── -->
+  @if (!isLoading && !errorMessage && hasNoData) {
+    <mat-card class="no-data-card">
+      <mat-card-content>
+        <div class="no-data-content">
+          <mat-icon class="no-data-icon" aria-hidden="true">bar_chart</mat-icon>
+          <h2 class="no-data-title">No performance data available yet</h2>
+          <p class="no-data-message">
+            Complete your first practice session to see your performance analytics here.
+          </p>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="goToPractice()"
+            aria-label="Start a practice session"
+          >
+            <mat-icon aria-hidden="true">play_arrow</mat-icon>
+            Start Practising
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- ── Main dashboard content ────────────────────────────────────────── -->
+  @if (!isLoading && !errorMessage && chartData && !hasNoData) {
+
+    <!-- Page header -->
+    <div class="dashboard-header">
+      <h1 class="dashboard-title">Performance Dashboard</h1>
+      <div class="header-actions">
+        <button
+          mat-stroked-button
+          (click)="goToPractice()"
+          aria-label="Return to practice questions"
+        >
+          <mat-icon aria-hidden="true">arrow_back</mat-icon>
+          Practice
+        </button>
+        <!-- Drill mode activation button (Requirement 6.1) -->
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="activateDrillMode()"
+          [disabled]="chartData.weakAreaCount === 0"
+          [matTooltip]="chartData.weakAreaCount === 0 ? 'No weak areas identified yet' : 'Focus on your ' + chartData.weakAreaCount + ' weak area(s)'"
+          aria-label="Activate drill mode for weak areas"
+        >
+          <mat-icon aria-hidden="true">fitness_center</mat-icon>
+          Drill Mode
+          @if (chartData.weakAreaCount > 0) {
+            <span
+              class="weak-area-badge"
+              [attr.aria-label]="chartData.weakAreaCount + ' weak areas'"
+            >{{ chartData.weakAreaCount }}</span>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Summary cards row ─────────────────────────────────────────── -->
+    <div class="summary-row" role="region" aria-label="Performance summary">
+
+      <!-- Overall score card (Requirement 5.1) -->
+      <mat-card class="summary-card score-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="summary-icon" aria-hidden="true">emoji_events</mat-icon>
+          <mat-card-title>Overall Score</mat-card-title>
+          <mat-card-subtitle>Across all sessions</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div
+            class="big-score"
+            [class]="scoreClass(chartData.overallScore)"
+            [attr.aria-label]="'Overall score: ' + (chartData.overallScore | number:'1.1-1') + ' percent'"
+          >
+            {{ chartData.overallScore | number:'1.1-1' }}%
+          </div>
+          <mat-progress-bar
+            [value]="chartData.overallScore"
+            [color]="progressBarColor(chartData.overallScore)"
+            aria-label="Overall score progress bar"
+          ></mat-progress-bar>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Total questions answered -->
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="summary-icon" aria-hidden="true">quiz</mat-icon>
+          <mat-card-title>Questions Answered</mat-card-title>
+          <mat-card-subtitle>Total across all sessions</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="big-number" [attr.aria-label]="chartData.totalQuestionsAnswered + ' questions answered'">
+            {{ chartData.totalQuestionsAnswered | number }}
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Weak areas count (Requirement 5.6) -->
+      <mat-card class="summary-card" [class.weak-areas-card]="chartData.weakAreaCount > 0">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="summary-icon" aria-hidden="true">warning</mat-icon>
+          <mat-card-title>Weak Areas</mat-card-title>
+          <mat-card-subtitle>Topics below 70%</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div
+            class="big-number"
+            [class.score-poor]="chartData.weakAreaCount > 0"
+            [class.score-good]="chartData.weakAreaCount === 0"
+            [attr.aria-label]="chartData.weakAreaCount + ' weak areas identified'"
+          >
+            {{ chartData.weakAreaCount }}
+          </div>
+          @if (chartData.weakAreaCount === 0) {
+            <p class="all-proficient-text">All topics proficient!</p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+
+    <!-- ── Topic performance breakdown (Requirements 5.4, 5.5, 5.6) ──── -->
+    <mat-card class="section-card" role="region" aria-label="Topic performance breakdown">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="section-icon" aria-hidden="true">category</mat-icon>
+        <mat-card-title>Topic Performance</mat-card-title>
+        <mat-card-subtitle>Breakdown by exam topic area</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+
+        @if (sortedTopics.length === 0) {
+          <p class="empty-section-text">No topic data available yet.</p>
+        } @else {
+          <div class="topic-list" role="list">
+            @for (topic of sortedTopics; track topic.topic) {
+              <div
+                class="topic-row"
+                [class.weak-area-row]="topic.isWeakArea"
+                role="listitem"
+                [attr.aria-label]="topic.topic + ': ' + (topic.score | number:'1.1-1') + '% (' + topic.correct + ' of ' + topic.total + ' correct)' + (topic.isWeakArea ? ' - Weak area' : '')"
+              >
+                <div class="topic-info">
+                  <span class="topic-name">{{ topic.topic }}</span>
+                  @if (topic.isWeakArea) {
+                    <!-- Weak area chip (Requirement 5.6) -->
+                    <mat-chip
+                      class="weak-area-chip"
+                      color="warn"
+                      aria-label="Weak area"
+                    >
+                      <mat-icon matChipAvatar aria-hidden="true">warning</mat-icon>
+                      Weak Area
+                    </mat-chip>
+                  }
+                </div>
+                <div class="topic-stats">
+                  <span class="topic-fraction" aria-hidden="true">
+                    {{ topic.correct }}/{{ topic.total }}
+                  </span>
+                  <span
+                    class="topic-score"
+                    [class]="scoreClass(topic.score)"
+                    aria-hidden="true"
+                  >
+                    {{ topic.score | number:'1.1-1' }}%
+                  </span>
+                </div>
+                <mat-progress-bar
+                  class="topic-progress"
+                  [value]="topic.score"
+                  [color]="progressBarColor(topic.score)"
+                  aria-hidden="true"
+                ></mat-progress-bar>
+              </div>
+            }
+          </div>
+        }
+
+      </mat-card-content>
+    </mat-card>
+
+    <!-- ── Session history (Requirement 5.8) ─────────────────────────── -->
+    <mat-card class="section-card" role="region" aria-label="Recent session history">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="section-icon" aria-hidden="true">history</mat-icon>
+        <mat-card-title>Recent Sessions</mat-card-title>
+        <mat-card-subtitle>Last {{ chartData.sessionTrend.length }} sessions</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+
+        @if (chartData.sessionTrend.length === 0) {
+          <p class="empty-section-text">No session history available yet.</p>
+        } @else {
+          <div class="table-wrapper" role="region" aria-label="Session history table">
+            <table
+              mat-table
+              [dataSource]="chartData.sessionTrend"
+              class="session-table"
+              aria-label="Recent session history"
+            >
+
+              <!-- Date column -->
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef scope="col">Date</th>
+                <td mat-cell *matCellDef="let session">
+                  <span [attr.aria-label]="'Session date: ' + session.label">
+                    {{ session.label }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Score column -->
+              <ng-container matColumnDef="score">
+                <th mat-header-cell *matHeaderCellDef scope="col">Score</th>
+                <td mat-cell *matCellDef="let session">
+                  <span
+                    class="session-score"
+                    [class]="scoreClass(session.score)"
+                    [attr.aria-label]="'Score: ' + (session.score | number:'1.1-1') + ' percent'"
+                  >
+                    {{ session.score | number:'1.1-1' }}%
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Questions answered column -->
+              <ng-container matColumnDef="questionsAnswered">
+                <th mat-header-cell *matHeaderCellDef scope="col">Questions</th>
+                <td mat-cell *matCellDef="let session">
+                  <span [attr.aria-label]="session.questionsAnswered + ' questions answered'">
+                    {{ session.questionsAnswered }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Mode column -->
+              <ng-container matColumnDef="mode">
+                <th mat-header-cell *matHeaderCellDef scope="col">Mode</th>
+                <td mat-cell *matCellDef="let session">
+                  @if (session.isDrillMode) {
+                    <mat-chip color="accent" aria-label="Drill mode session">
+                      <mat-icon matChipAvatar aria-hidden="true">fitness_center</mat-icon>
+                      Drill
+                    </mat-chip>
+                  } @else {
+                    <mat-chip aria-label="Practice mode session">
+                      <mat-icon matChipAvatar aria-hidden="true">school</mat-icon>
+                      Practice
+                    </mat-chip>
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="sessionHistoryColumns"></tr>
+              <tr
+                mat-row
+                *matRowDef="let row; columns: sessionHistoryColumns;"
+                [class.drill-row]="row.isDrillMode"
+              ></tr>
+
+            </table>
+          </div>
+        }
+
+      </mat-card-content>
+    </mat-card>
+
+  }
+  <!-- end main dashboard content -->
+
+</div>

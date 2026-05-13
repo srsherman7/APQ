@@ -1,0 +1,149 @@
+<div class="practice-container" aria-label="Practice Session">
+
+  <!-- ── Loading state ──────────────────────────────────────────────────── -->
+  @if (viewState === 'loading') {
+    <div class="loading-overlay" role="status" aria-live="polite" aria-label="Loading">
+      <mat-spinner diameter="56"></mat-spinner>
+      <p class="loading-text">Loading your session…</p>
+    </div>
+  }
+
+  <!-- ── Error state ────────────────────────────────────────────────────── -->
+  @if (viewState === 'error') {
+    <mat-card class="error-card" role="alert">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon class="error-icon" aria-hidden="true">error_outline</mat-icon>
+          <div class="error-body">
+            <p class="error-message">{{ errorMessage }}</p>
+            <div class="error-actions">
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="retry()"
+                aria-label="Retry"
+              >
+                <mat-icon aria-hidden="true">refresh</mat-icon>
+                Retry
+              </button>
+              <button
+                mat-stroked-button
+                (click)="startNewSession()"
+                aria-label="Start a new session"
+              >
+                <mat-icon aria-hidden="true">add_circle</mat-icon>
+                New Session
+              </button>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- ── Session complete (Requirement 1.9) ────────────────────────────── -->
+  @if (viewState === 'session-complete') {
+    <mat-card class="complete-card" role="status" aria-live="polite">
+      <mat-card-content>
+        <div class="complete-content">
+          <mat-icon class="complete-icon" aria-hidden="true">emoji_events</mat-icon>
+          <h2 class="complete-title">Session Complete!</h2>
+          <p class="complete-message">
+            You've answered all available questions in this session.
+            Check your dashboard to review your performance, or start a new session to continue practising.
+          </p>
+          <div class="complete-actions">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="goToDashboard()"
+              aria-label="View performance dashboard"
+            >
+              <mat-icon aria-hidden="true">bar_chart</mat-icon>
+              View Dashboard
+            </button>
+            <button
+              mat-stroked-button
+              color="primary"
+              (click)="startNewSession()"
+              aria-label="Start a new session"
+            >
+              <mat-icon aria-hidden="true">replay</mat-icon>
+              New Session
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- ── Question view (Requirements 1.2, 1.5, 1.6, 1.7, 1.8) ─────────── -->
+  @if (viewState === 'question' && currentQuestion) {
+    <div class="question-wrapper">
+      <!-- Session controls bar -->
+      <div class="session-controls" role="toolbar" aria-label="Session controls">
+        <span class="session-info" [attr.aria-label]="'Question ' + questionNumber">
+          <mat-icon aria-hidden="true">quiz</mat-icon>
+          Question {{ questionNumber }}
+        </span>
+        <div class="control-buttons">
+          <button
+            mat-stroked-button
+            (click)="goToDashboard()"
+            aria-label="View analytics dashboard"
+          >
+            <mat-icon aria-hidden="true">bar_chart</mat-icon>
+            Dashboard
+          </button>
+          <button
+            mat-stroked-button
+            color="warn"
+            (click)="startNewSession()"
+            aria-label="Start a new session"
+          >
+            <mat-icon aria-hidden="true">replay</mat-icon>
+            New Session
+          </button>
+        </div>
+      </div>
+
+      <app-question
+        [question]="currentQuestion"
+        [questionNumber]="questionNumber"
+        (answerSubmitted)="onAnswerSubmitted($event)"
+      ></app-question>
+    </div>
+  }
+
+  <!-- ── Feedback view (Requirements 3.1–3.7, 8.1, 8.2, 15.6) ─────────── -->
+  @if (viewState === 'feedback' && currentFeedback && currentSession) {
+    <div class="feedback-wrapper">
+      <!-- Session controls bar -->
+      <div class="session-controls" role="toolbar" aria-label="Session controls">
+        <span class="session-info">
+          <mat-icon aria-hidden="true">feedback</mat-icon>
+          Feedback
+        </span>
+        <div class="control-buttons">
+          <button
+            mat-stroked-button
+            (click)="goToDashboard()"
+            aria-label="View analytics dashboard"
+          >
+            <mat-icon aria-hidden="true">bar_chart</mat-icon>
+            Dashboard
+          </button>
+        </div>
+      </div>
+
+      <app-feedback
+        [feedback]="currentFeedback"
+        [sessionId]="currentSession.session_id"
+        [preloadedNextQuestion]="preloadedNextQuestion"
+        [currentDifficulty]="currentSession.current_difficulty_level"
+        (nextQuestion)="onNextQuestion($event)"
+      ></app-feedback>
+    </div>
+  }
+
+</div>

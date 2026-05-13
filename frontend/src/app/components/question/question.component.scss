@@ -1,0 +1,199 @@
+// ── Loading state ─────────────────────────────────────────────────────────────
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  gap: 16px;
+}
+
+.loading-text {
+  font-size: 1rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0;
+}
+
+// ── Card layout ───────────────────────────────────────────────────────────────
+
+.question-card {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+
+  mat-card-header {
+    padding-bottom: 0;
+  }
+}
+
+// ── Question meta row (number, topic, difficulty) ─────────────────────────────
+
+.question-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0 8px;
+  font-size: 0.875rem;
+}
+
+.question-number {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.topic-badge,
+.difficulty-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.topic-badge {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.difficulty-badge {
+  background-color: #f3e5f5;
+  color: #6a1b9a;
+}
+
+// ── Question text ─────────────────────────────────────────────────────────────
+
+.question-text {
+  font-size: 1.0625rem; // ~17px – above 16px minimum (Req 10.6)
+  line-height: 1.6;     // above 1.5× minimum (Req 10.8)
+  color: rgba(0, 0, 0, 0.87);
+  margin: 16px 0 20px;
+}
+
+// ── Error banner ──────────────────────────────────────────────────────────────
+
+.error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  background-color: #fdecea;
+  color: #b71c1c;
+  font-size: 0.875rem;
+  line-height: 1.5;
+
+  mat-icon {
+    flex-shrink: 0;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+  }
+}
+
+// ── Answer options ────────────────────────────────────────────────────────────
+
+.options-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.option-button {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  min-height: 44px; // Requirement 10.5 – minimum touch target
+
+  // Override mat-radio-button default display
+  &.mat-mdc-radio-button {
+    display: flex;
+  }
+
+  &:hover:not(.mat-mdc-radio-disabled) {
+    background-color: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.24);
+  }
+
+  // Visual feedback for selected option (Requirement 1.6)
+  &.option-selected {
+    background-color: #e8f0fe;
+    border-color: #1a73e8;
+  }
+}
+
+.option-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 1rem; // Requirement 10.6 – minimum 16px on mobile
+  line-height: 1.5; // Requirement 10.8
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.option-letter {
+  font-weight: 600;
+  min-width: 20px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+// ── Submit row ────────────────────────────────────────────────────────────────
+
+.submit-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+.submit-button {
+  min-height: 44px; // Requirement 10.5 – minimum touch target
+  min-width: 160px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-spinner {
+    display: inline-block;
+  }
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// ── Responsive adjustments ────────────────────────────────────────────────────
+
+@media (max-width: 767px) {
+  .question-card {
+    // Remove card elevation on small screens for a flatter look
+    box-shadow: none;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+  }
+
+  .submit-row {
+    justify-content: stretch;
+  }
+
+  .submit-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .question-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

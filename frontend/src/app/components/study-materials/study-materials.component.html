@@ -1,0 +1,343 @@
+<div class="study-container" aria-label="Study Materials">
+
+  <!-- ── Page header ──────────────────────────────────────────────────────── -->
+  <div class="study-header">
+    <div class="study-title-row">
+      <mat-icon class="study-header-icon" aria-hidden="true">menu_book</mat-icon>
+      <h1 class="study-title">Study Materials</h1>
+    </div>
+    <p class="study-subtitle">
+      Review pre-generated cheatsheets or generate an on-demand study guide for any exam topic.
+    </p>
+  </div>
+
+  <!-- ── Cheatsheets section (Req 7.1, 7.6) ──────────────────────────────── -->
+  <section aria-labelledby="cheatsheets-heading">
+    <h2 id="cheatsheets-heading" class="section-title">
+      <mat-icon aria-hidden="true">description</mat-icon>
+      Available Cheatsheets
+    </h2>
+
+    <!-- Loading state -->
+    @if (cheatsheetsLoading) {
+      <div class="loading-row" role="status" aria-live="polite" aria-label="Loading cheatsheets">
+        <mat-spinner diameter="36"></mat-spinner>
+        <span class="loading-text">Loading cheatsheets…</span>
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (!cheatsheetsLoading && cheatsheetsError) {
+      <mat-card class="error-card" role="alert">
+        <mat-card-content>
+          <div class="error-content">
+            <mat-icon class="error-icon" aria-hidden="true">error_outline</mat-icon>
+            <div class="error-body">
+              <p class="error-message">{{ cheatsheetsError }}</p>
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="loadCheatsheets()"
+                aria-label="Retry loading cheatsheets"
+              >
+                <mat-icon aria-hidden="true">refresh</mat-icon>
+                Retry
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Cheatsheet grid (Req 7.6 – at least 5) -->
+    @if (!cheatsheetsLoading && !cheatsheetsError && cheatsheets.length > 0) {
+      <div class="cheatsheet-grid" role="list" aria-label="Available cheatsheets">
+        @for (sheet of cheatsheets; track sheet.id) {
+          <mat-card
+            class="cheatsheet-card"
+            role="listitem"
+            [attr.aria-label]="sheet.title + ': ' + sheet.topic_area"
+          >
+            <mat-card-header>
+              <mat-icon mat-card-avatar class="cheatsheet-icon" aria-hidden="true">
+                {{ topicIcon(sheet.topic_area) }}
+              </mat-icon>
+              <mat-card-title>{{ sheet.title }}</mat-card-title>
+              <mat-card-subtitle>{{ sheet.topic_area }}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <p class="cheatsheet-description">{{ sheet.description }}</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button
+                mat-stroked-button
+                color="primary"
+                (click)="generateStudyGuide(sheet.topic_area)"
+                [disabled]="studyGuideLoading"
+                [attr.aria-label]="'Generate study guide for ' + sheet.topic_area"
+              >
+                <mat-icon aria-hidden="true">auto_stories</mat-icon>
+                Study Guide
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
+  </section>
+
+  <mat-divider class="section-divider"></mat-divider>
+
+  <!-- ── On-demand study guide section (Req 7.2, 7.3, 7.4) ───────────────── -->
+  <section aria-labelledby="study-guide-heading">
+    <h2 id="study-guide-heading" class="section-title">
+      <mat-icon aria-hidden="true">auto_stories</mat-icon>
+      Generate Study Guide
+    </h2>
+    <p class="section-description">
+      Select a topic to generate a comprehensive study guide with definitions, use cases, exam scenarios, and comparisons.
+    </p>
+
+    <!-- Topic selector chips -->
+    <div class="topic-chips" role="group" aria-label="Select a topic to generate a study guide">
+      @for (topic of topicAreas; track topic) {
+        <button
+          mat-stroked-button
+          class="topic-chip-btn"
+          [class.topic-chip-selected]="selectedTopic === topic"
+          [class]="topicColorClass(topic)"
+          (click)="generateStudyGuide(topic)"
+          [disabled]="studyGuideLoading"
+          [attr.aria-label]="'Generate study guide for ' + topic"
+          [attr.aria-pressed]="selectedTopic === topic"
+        >
+          <mat-icon aria-hidden="true">{{ topicIcon(topic) }}</mat-icon>
+          {{ topic }}
+        </button>
+      }
+    </div>
+
+    <!-- Study guide loading state (Req 7.2) -->
+    @if (studyGuideLoading) {
+      <div class="loading-row guide-loading" role="status" aria-live="polite" aria-label="Generating study guide">
+        <mat-spinner diameter="40"></mat-spinner>
+        <div class="loading-info">
+          <span class="loading-text">Generating study guide for <strong>{{ selectedTopic }}</strong>…</span>
+          <span class="loading-hint">This may take up to 30 seconds.</span>
+        </div>
+      </div>
+    }
+
+    <!-- Study guide error (Req 7.5 – timeout / failure message) -->
+    @if (!studyGuideLoading && studyGuideError) {
+      <mat-card class="error-card" role="alert">
+        <mat-card-content>
+          <div class="error-content">
+            <mat-icon class="error-icon" aria-hidden="true">error_outline</mat-icon>
+            <div class="error-body">
+              <p class="error-message">{{ studyGuideError }}</p>
+              <div class="error-actions">
+                @if (selectedTopic) {
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    (click)="generateStudyGuide(selectedTopic)"
+                    aria-label="Retry generating study guide"
+                  >
+                    <mat-icon aria-hidden="true">refresh</mat-icon>
+                    Retry
+                  </button>
+                }
+                <button
+                  mat-stroked-button
+                  (click)="clearStudyGuide()"
+                  aria-label="Dismiss error"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- ── Study guide content (Req 7.3, 7.4, 7.7, 7.8) ─────────────────── -->
+    @if (!studyGuideLoading && studyGuide) {
+      <div class="study-guide-content" role="region" [attr.aria-label]="'Study guide for ' + studyGuide.topic_area">
+
+        <!-- Guide header -->
+        <div class="guide-header">
+          <h3 class="guide-title">
+            <mat-icon aria-hidden="true">{{ topicIcon(studyGuide.topic_area) }}</mat-icon>
+            {{ studyGuide.topic_area }}
+          </h3>
+          <button
+            mat-icon-button
+            (click)="clearStudyGuide()"
+            matTooltip="Close study guide"
+            aria-label="Close study guide"
+          >
+            <mat-icon aria-hidden="true">close</mat-icon>
+          </button>
+        </div>
+
+        <mat-accordion multi>
+
+          <!-- ── Section 1: Service Definitions (Req 7.7, 7.8) ─────────── -->
+          <mat-expansion-panel expanded>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon class="panel-icon" aria-hidden="true">info</mat-icon>
+                {{ studyGuide.sections.service_definitions.heading }}
+              </mat-panel-title>
+              <mat-panel-description>
+                {{ studyGuide.sections.service_definitions.content.length }} definitions
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <div class="definitions-list" role="list">
+              @for (def of studyGuide.sections.service_definitions.content; track def.name) {
+                <div class="definition-item" role="listitem">
+                  <h4 class="definition-name">{{ def.name }}</h4>
+                  <p class="definition-desc">{{ def.description }}</p>
+                  @if (def.key_features && def.key_features.length > 0) {
+                    <ul class="feature-list" aria-label="Key features">
+                      @for (feature of def.key_features; track feature) {
+                        <li class="feature-item">{{ feature }}</li>
+                      }
+                    </ul>
+                  }
+                </div>
+              }
+            </div>
+          </mat-expansion-panel>
+
+          <!-- ── Section 2: Use Cases (Req 7.7, 7.8) ───────────────────── -->
+          <mat-expansion-panel expanded>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon class="panel-icon" aria-hidden="true">lightbulb</mat-icon>
+                {{ studyGuide.sections.use_cases.heading }}
+              </mat-panel-title>
+              <mat-panel-description>
+                {{ studyGuide.sections.use_cases.content.length }} use cases
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <div class="use-cases-list" role="list">
+              @for (uc of studyGuide.sections.use_cases.content; track uc.title) {
+                <div class="use-case-item" role="listitem">
+                  <h4 class="use-case-title">{{ uc.title }}</h4>
+                  <p class="use-case-desc">{{ uc.description }}</p>
+                  @if (uc.services && uc.services.length > 0) {
+                    <div class="services-chips" aria-label="AWS services used">
+                      @for (svc of uc.services; track svc) {
+                        <mat-chip class="service-chip" aria-label="{{ svc }}">{{ svc }}</mat-chip>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </mat-expansion-panel>
+
+          <!-- ── Section 3: Exam Scenarios (Req 7.7, 7.8) ─────────────── -->
+          <mat-expansion-panel expanded>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon class="panel-icon" aria-hidden="true">quiz</mat-icon>
+                {{ studyGuide.sections.exam_scenarios.heading }}
+              </mat-panel-title>
+              <mat-panel-description>
+                {{ studyGuide.sections.exam_scenarios.content.length }} scenarios
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <div class="scenarios-list" role="list">
+              @for (scenario of studyGuide.sections.exam_scenarios.content; track scenario.scenario; let i = $index) {
+                <div class="scenario-item" role="listitem">
+                  <div class="scenario-number" aria-hidden="true">{{ i + 1 }}</div>
+                  <div class="scenario-body">
+                    <p class="scenario-question">
+                      <strong>Scenario:</strong> {{ scenario.scenario }}
+                    </p>
+                    <p class="scenario-approach">
+                      <mat-icon class="inline-icon" aria-hidden="true">check_circle</mat-icon>
+                      <strong>Correct Approach:</strong> {{ scenario.correct_approach }}
+                    </p>
+                    <p class="scenario-why">
+                      <mat-icon class="inline-icon" aria-hidden="true">psychology</mat-icon>
+                      <strong>Why It Works:</strong> {{ scenario.why_it_works }}
+                    </p>
+                  </div>
+                </div>
+              }
+            </div>
+          </mat-expansion-panel>
+
+          <!-- ── Section 4: Comparison Table (Req 7.4, 7.7, 7.8) ────────── -->
+          <mat-expansion-panel expanded>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon class="panel-icon" aria-hidden="true">compare_arrows</mat-icon>
+                {{ studyGuide.sections.comparison_table.heading }}
+              </mat-panel-title>
+              <mat-panel-description>
+                {{ studyGuide.sections.comparison_table.content.length }} mappings
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <div class="table-wrapper" role="region" aria-label="IT concepts to AWS services comparison">
+              <table
+                mat-table
+                [dataSource]="studyGuide.sections.comparison_table.content"
+                class="comparison-table"
+                aria-label="IT concepts to AWS services mapping"
+              >
+                <!-- IT Concept column -->
+                <ng-container matColumnDef="it_concept">
+                  <th mat-header-cell *matHeaderCellDef scope="col">Traditional IT Concept</th>
+                  <td mat-cell *matCellDef="let row">{{ row.it_concept }}</td>
+                </ng-container>
+
+                <!-- AWS Service column -->
+                <ng-container matColumnDef="aws_service">
+                  <th mat-header-cell *matHeaderCellDef scope="col">AWS Service</th>
+                  <td mat-cell *matCellDef="let row">
+                    <strong>{{ row.aws_service }}</strong>
+                  </td>
+                </ng-container>
+
+                <!-- Key Difference column -->
+                <ng-container matColumnDef="key_difference">
+                  <th mat-header-cell *matHeaderCellDef scope="col">Key Difference</th>
+                  <td mat-cell *matCellDef="let row">{{ row.key_difference }}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="comparisonColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: comparisonColumns;"></tr>
+              </table>
+            </div>
+          </mat-expansion-panel>
+
+        </mat-accordion>
+      </div>
+    }
+  </section>
+
+  <!-- ── Navigation back to practice (Req 7.9) ────────────────────────────── -->
+  <div class="nav-footer">
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="navigateToPractice()"
+      aria-label="Return to practice questions"
+      class="back-btn"
+    >
+      <mat-icon aria-hidden="true">arrow_back</mat-icon>
+      Back to Practice
+    </button>
+  </div>
+
+</div>

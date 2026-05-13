@@ -1,0 +1,181 @@
+.practice-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+  min-height: calc(100vh - 64px);
+}
+
+/* ── Loading ─────────────────────────────────────────────────────────────── */
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 16px;
+}
+
+.loading-text {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* ── Error ───────────────────────────────────────────────────────────────── */
+.error-card {
+  margin: 24px 0;
+  border-left: 4px solid #f44336;
+}
+
+.error-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.error-icon {
+  color: #f44336;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.error-body {
+  flex: 1;
+}
+
+.error-message {
+  margin: 0 0 16px;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.error-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ── Session complete ─────────────────────────────────────────────────────── */
+.complete-card {
+  margin: 24px 0;
+  text-align: center;
+}
+
+.complete-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 16px;
+}
+
+.complete-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  color: #ffc107;
+}
+
+.complete-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.complete-message {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.6);
+  max-width: 480px;
+  line-height: 1.6;
+}
+
+.complete-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ── Session controls bar ─────────────────────────────────────────────────── */
+.session-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 8px 0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.session-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.control-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Question / feedback wrappers ─────────────────────────────────────────── */
+.question-wrapper,
+.feedback-wrapper {
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .practice-container {
+    padding: 8px;
+  }
+
+  .session-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .control-buttons {
+    width: 100%;
+
+    button {
+      flex: 1;
+      min-height: 44px;
+    }
+  }
+
+  .complete-actions {
+    flex-direction: column;
+    width: 100%;
+
+    button {
+      width: 100%;
+      min-height: 44px;
+    }
+  }
+
+  .error-actions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+      min-height: 44px;
+    }
+  }
+}

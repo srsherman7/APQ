@@ -1,0 +1,101 @@
+<!-- Question Component (Requirements 1.2, 1.5, 1.6, 1.7, 1.8) -->
+
+<!-- Loading state: question input is null -->
+@if (!question) {
+  <div class="loading-container" aria-label="Loading question" aria-live="polite">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p class="loading-text">Loading question…</p>
+  </div>
+} @else {
+  <mat-card class="question-card">
+    <!-- Question header: number and topic area -->
+    <mat-card-header>
+      <mat-card-subtitle class="question-meta">
+        <span class="question-number" [attr.aria-label]="'Question number ' + questionNumber">
+          Question {{ questionNumber }}
+        </span>
+        <span class="topic-badge" [attr.aria-label]="'Topic: ' + question.topic_area">
+          {{ question.topic_area }}
+        </span>
+        <span class="difficulty-badge" [attr.aria-label]="'Difficulty level ' + question.difficulty_level">
+          Level {{ question.difficulty_level }}
+        </span>
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-divider></mat-divider>
+
+    <mat-card-content>
+      <!-- Question text (Requirement 1.2) -->
+      <p class="question-text" id="question-text-{{ question.question_id }}">
+        {{ question.question_text }}
+      </p>
+
+      <!-- Submission error banner (network / server errors) -->
+      @if (submissionErrorMessage) {
+        <div class="error-banner" role="alert" aria-live="assertive">
+          <mat-icon aria-hidden="true">error_outline</mat-icon>
+          <span>{{ submissionErrorMessage }}</span>
+        </div>
+      }
+
+      <!-- No-answer-selected error (Requirement 1.8) -->
+      @if (noAnswerError) {
+        <div class="error-banner" role="alert" aria-live="assertive">
+          <mat-icon aria-hidden="true">warning</mat-icon>
+          <span>{{ noAnswerError }}</span>
+        </div>
+      }
+
+      <!-- Answer options form (Requirements 1.5, 1.6) -->
+      <form
+        [formGroup]="answerForm"
+        (ngSubmit)="onSubmit()"
+        novalidate
+        [attr.aria-labelledby]="'question-text-' + question.question_id"
+      >
+        <mat-radio-group
+          formControlName="answer"
+          class="options-group"
+          aria-label="Answer options"
+          (change)="onOptionSelected()"
+        >
+          @for (option of question.options; track option; let i = $index) {
+            <mat-radio-button
+              [value]="option"
+              class="option-button"
+              [class.option-selected]="selectedAnswer === option"
+              [attr.aria-label]="'Option ' + (i + 1) + ': ' + option"
+            >
+              <span class="option-label">
+                <span class="option-letter" aria-hidden="true">{{ 'ABCDE'[i] }}.</span>
+                {{ option }}
+              </span>
+            </mat-radio-button>
+          }
+        </mat-radio-group>
+
+        <!-- Submit button (Requirement 1.7) -->
+        <div class="submit-row">
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            class="submit-button"
+            [disabled]="isSubmitting"
+            aria-label="Submit answer"
+          >
+            @if (isSubmitting) {
+              <mat-spinner diameter="20" aria-label="Submitting…"></mat-spinner>
+            } @else {
+              <ng-container>
+                <mat-icon aria-hidden="true">send</mat-icon>
+                Submit Answer
+              </ng-container>
+            }
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+}

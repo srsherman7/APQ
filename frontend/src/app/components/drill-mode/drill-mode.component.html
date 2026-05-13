@@ -1,0 +1,270 @@
+<div class="drill-container" aria-label="Drill Mode">
+
+  <!-- ── Loading state ──────────────────────────────────────────────────── -->
+  @if (isLoading) {
+    <div class="loading-overlay" role="status" aria-live="polite" aria-label="Loading drill mode data">
+      <mat-spinner diameter="56"></mat-spinner>
+      <p class="loading-text">Loading your weak areas…</p>
+    </div>
+  }
+
+  <!-- ── Error state ────────────────────────────────────────────────────── -->
+  @if (!isLoading && errorMessage) {
+    <mat-card class="error-card" role="alert">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon class="error-icon" aria-hidden="true">error_outline</mat-icon>
+          <div class="error-body">
+            <p class="error-message">{{ errorMessage }}</p>
+            <div class="error-actions">
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="loadInitialState()"
+                aria-label="Retry loading drill mode data"
+              >
+                <mat-icon aria-hidden="true">refresh</mat-icon>
+                Retry
+              </button>
+              <button
+                mat-stroked-button
+                (click)="dismissError()"
+                aria-label="Dismiss error"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- ── Main content ───────────────────────────────────────────────────── -->
+  @if (!isLoading) {
+
+    <!-- Page header -->
+    <div class="drill-header">
+      <div class="drill-title-row">
+        <mat-icon class="drill-header-icon" aria-hidden="true">fitness_center</mat-icon>
+        <h1 class="drill-title">Drill Mode</h1>
+        @if (isDrillActive) {
+          <mat-chip class="active-chip" color="accent" aria-label="Drill mode is active">
+            <mat-icon matChipAvatar aria-hidden="true">play_circle</mat-icon>
+            Active
+          </mat-chip>
+        }
+      </div>
+      <p class="drill-subtitle">
+        Focused practice on your weak areas to boost proficiency.
+      </p>
+    </div>
+
+    <!-- ── No weak areas message (Requirement 6.4) ───────────────────── -->
+    @if (!isDrillActive && weakAreas.length === 0 && !allAreasMastered) {
+      <mat-card class="no-weak-areas-card" role="status">
+        <mat-card-content>
+          <div class="no-weak-areas-content">
+            <mat-icon class="success-icon" aria-hidden="true">emoji_events</mat-icon>
+            <h2 class="no-weak-areas-title">All Areas Proficient!</h2>
+            <p class="no-weak-areas-message">
+              You have no weak areas at the moment. Keep practising to maintain your proficiency,
+              or return to normal practice mode.
+            </p>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="exitToNormalPractice()"
+              aria-label="Return to normal practice"
+            >
+              <mat-icon aria-hidden="true">arrow_back</mat-icon>
+              Back to Practice
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- ── All areas mastered during drill (Requirement 6.8) ─────────── -->
+    @if (allAreasMastered) {
+      <mat-card class="mastered-card" role="status" aria-live="polite">
+        <mat-card-content>
+          <div class="mastered-content">
+            <mat-icon class="mastered-icon" aria-hidden="true">military_tech</mat-icon>
+            <h2 class="mastered-title">All Weak Areas Mastered!</h2>
+            <p class="mastered-message">
+              Congratulations! You have mastered all your weak areas during this drill session.
+              Drill mode has been deactivated automatically.
+            </p>
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="exitToNormalPractice()"
+              aria-label="Return to normal practice"
+            >
+              <mat-icon aria-hidden="true">school</mat-icon>
+              Continue Practising
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- ── Weak areas list ────────────────────────────────────────────── -->
+    @if (weakAreas.length > 0) {
+      <mat-card class="weak-areas-card" role="region" aria-label="Weak areas for drilling">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="section-icon" aria-hidden="true">warning</mat-icon>
+          <mat-card-title>Weak Areas ({{ weakAreas.length }})</mat-card-title>
+          <mat-card-subtitle>Topics below the proficiency threshold</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="topic-list" role="list">
+            @for (area of weakAreas; track area.topic) {
+              <div
+                class="topic-row"
+                [class.drilling]="isDrillActive && drillTopics.includes(area.topic)"
+                role="listitem"
+                [attr.aria-label]="area.topic + ': ' + (area.score | number:'1.1-1') + '% proficiency, ' + area.attempt_count + ' attempts'"
+              >
+                <div class="topic-info">
+                  <span class="topic-name">{{ area.topic }}</span>
+                  @if (isDrillActive && drillTopics.includes(area.topic)) {
+                    <mat-chip
+                      class="drilling-chip"
+                      color="accent"
+                      aria-label="Currently being drilled"
+                    >
+                      <mat-icon matChipAvatar aria-hidden="true">fitness_center</mat-icon>
+                      Drilling
+                    </mat-chip>
+                  }
+                </div>
+
+                <!-- Proficiency progress (Requirement 6.6) -->
+                <div class="topic-stats">
+                  <span class="topic-fraction" aria-hidden="true">
+                    {{ area.correct_count }}/{{ area.attempt_count }} correct
+                  </span>
+                  <span
+                    class="topic-score"
+                    [class.score-poor]="area.score < 40"
+                    [class.score-average]="area.score >= 40 && area.score < 60"
+                    [class.score-fair]="area.score >= 60"
+                    aria-hidden="true"
+                  >
+                    {{ area.score | number:'1.1-1' }}%
+                  </span>
+                </div>
+
+                <mat-progress-bar
+                  class="topic-progress"
+                  [value]="area.score"
+                  [color]="getProgressColor(area.score)"
+                  [attr.aria-label]="area.topic + ' proficiency: ' + (area.score | number:'1.1-1') + '%'"
+                ></mat-progress-bar>
+
+                <!-- Threshold indicator -->
+                <p class="threshold-hint" aria-hidden="true">
+                  Target: 75% &nbsp;·&nbsp; Need {{ area.attempt_count < 10 ? (10 - area.attempt_count) + ' more attempts' : 'score above 75%' }} to graduate
+                </p>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- ── Drill controls ─────────────────────────────────────────────── -->
+    @if (!allAreasMastered) {
+      <mat-card class="controls-card">
+        <mat-card-content>
+          <div class="controls-row">
+
+            <!-- Activate drill mode (Requirement 6.1, 6.3) -->
+            @if (!isDrillActive && weakAreas.length > 0) {
+              <button
+                mat-raised-button
+                color="warn"
+                (click)="activateDrillMode()"
+                [disabled]="isActivating"
+                aria-label="Activate drill mode to practise weak areas"
+                class="control-btn"
+              >
+                @if (isActivating) {
+                  <mat-spinner diameter="20" aria-hidden="true"></mat-spinner>
+                } @else {
+                  <mat-icon aria-hidden="true">fitness_center</mat-icon>
+                }
+                Start Drilling
+              </button>
+            }
+
+            <!-- Start practising while drill is active -->
+            @if (isDrillActive) {
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="exitToNormalPractice()"
+                [disabled]="isActivating"
+                aria-label="Go to practice questions in drill mode"
+                class="control-btn"
+              >
+                <mat-icon aria-hidden="true">play_arrow</mat-icon>
+                Practise Now
+              </button>
+            }
+
+            <!-- Exit drill mode (Requirement 6.9) -->
+            @if (isDrillActive) {
+              <button
+                mat-stroked-button
+                color="warn"
+                (click)="deactivateDrillMode()"
+                [disabled]="isActivating"
+                [matTooltip]="'Exit drill mode and return to normal practice'"
+                aria-label="Exit drill mode and return to normal practice"
+                class="control-btn"
+              >
+                @if (isActivating) {
+                  <mat-spinner diameter="20" aria-hidden="true"></mat-spinner>
+                } @else {
+                  <mat-icon aria-hidden="true">exit_to_app</mat-icon>
+                }
+                Exit Drill Mode
+              </button>
+            }
+
+            <!-- Back to dashboard -->
+            <button
+              mat-stroked-button
+              (click)="exitToNormalPractice()"
+              [disabled]="isActivating"
+              aria-label="Return to practice"
+              class="control-btn back-btn"
+            >
+              <mat-icon aria-hidden="true">arrow_back</mat-icon>
+              Back to Practice
+            </button>
+
+          </div>
+
+          <!-- Difficulty level indicator (Requirement 6.5) -->
+          @if (isDrillActive) {
+            <div class="difficulty-info" role="status" aria-live="polite">
+              <mat-icon aria-hidden="true">tune</mat-icon>
+              <span>
+                Adaptive difficulty active &mdash; current level:
+                <strong [attr.aria-label]="'Difficulty level ' + currentDifficultyLevel">{{ currentDifficultyLevel }}</strong>/5
+              </span>
+            </div>
+          }
+
+        </mat-card-content>
+      </mat-card>
+    }
+
+  }
+  <!-- end main content -->
+
+</div>

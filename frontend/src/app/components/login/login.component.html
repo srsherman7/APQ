@@ -1,0 +1,92 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <mat-card-header>
+      <mat-card-title>Sign In</mat-card-title>
+      <mat-card-subtitle>AWS Exam Practice Application</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Error message banner (Requirement 14.9) -->
+      @if (errorMessage) {
+        <div class="error-banner" role="alert" aria-live="assertive">
+          <mat-icon aria-hidden="true">error_outline</mat-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      <form
+        [formGroup]="loginForm"
+        (ngSubmit)="onSubmit()"
+        novalidate
+        aria-label="Login form"
+      >
+        <!-- Username / Email field (Requirement 14.7) -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Username or Email</mat-label>
+          <input
+            matInput
+            formControlName="username"
+            type="text"
+            autocomplete="username"
+            placeholder="Enter your username or email"
+            aria-required="true"
+          />
+          <mat-icon matPrefix aria-hidden="true">person</mat-icon>
+          @if (loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched) {
+            <mat-error>Username or email is required.</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Password field (Requirement 14.7) -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            formControlName="password"
+            [type]="hidePassword ? 'password' : 'text'"
+            autocomplete="current-password"
+            placeholder="Enter your password"
+            aria-required="true"
+          />
+          <mat-icon matPrefix aria-hidden="true">lock</mat-icon>
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hidePassword = !hidePassword"
+            [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'"
+            [attr.aria-pressed]="!hidePassword"
+          >
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched) {
+            <mat-error>Password is required.</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Submit button -->
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          class="full-width submit-button"
+          [disabled]="isLoading"
+          aria-label="Sign in"
+        >
+          @if (isLoading) {
+            <mat-spinner diameter="20" aria-label="Signing in…"></mat-spinner>
+          } @else {
+            Sign In
+          }
+        </button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <span class="register-prompt">
+        Don't have an account?
+        <a routerLink="/register" mat-button color="primary">Create one</a>
+      </span>
+    </mat-card-actions>
+  </mat-card>
+</div>
