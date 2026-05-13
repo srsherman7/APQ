@@ -387,8 +387,8 @@ Or re-run the seed script — it skips questions that already exist (matched by 
    npm run build
    # Output in frontend/dist/frontend/browser/
    ```
-<img width="2538" height="918" alt="image" src="https://github.com/user-attachments/assets/895ef36b-7a6b-402d-b2b5-0c730e4dd218" />
 <img width="757" height="573" alt="image" src="https://github.com/user-attachments/assets/3d697589-479a-4603-9ecb-0b492179efc4" />
+<img width="2538" height="918" alt="image" src="https://github.com/user-attachments/assets/895ef36b-7a6b-402d-b2b5-0c730e4dd218" />
 <img width="2549" height="970" alt="image" src="https://github.com/user-attachments/assets/4a40da09-5dac-4c09-8eae-f6a679e5850d" />
 <img width="2536" height="1147" alt="image" src="https://github.com/user-attachments/assets/43d07c66-1d3f-4e7d-afce-ddad8d0d710d" />
 
