@@ -17,6 +17,7 @@ A full-stack web application for preparing for the AWS Cloud Practitioner certif
 - [Question Bank](#question-bank)
 - [Adding Questions](#adding-questions)
 - [Production Notes](#production-notes)
+- [Screen Shots](#screen-shots)
 
 ---
 
