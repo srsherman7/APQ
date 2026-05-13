@@ -387,3 +387,4 @@ Or re-run the seed script — it skips questions that already exist (matched by 
    npm run build
    # Output in frontend/dist/frontend/browser/
    ```
+https://github.com/srsherman7/APQ/blob/master/screenshots/login_reg.png?raw=true
