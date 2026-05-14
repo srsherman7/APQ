@@ -64,10 +64,7 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true,
-              "define": {
-                "__API_BASE_URL__": "\"http://localhost:5000\""
-              }
+              "sourceMap": true
             }
           },
           "defaultConfiguration": "production"
