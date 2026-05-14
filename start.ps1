@@ -131,7 +131,9 @@ Write-Host '  App running on $AppUrl' -ForegroundColor Green
 Write-Host '  Also available on http://localhost:4201' -ForegroundColor Green
 Write-Host '========================================' -ForegroundColor Cyan
 Write-Host ''
-python app.py
+try { python app.py } catch { Write-Host `$_.Exception.Message -ForegroundColor Red }
+Write-Host 'Server stopped. Press Enter to close.' -ForegroundColor Yellow
+Read-Host
 "@
 
 Start-Process powershell -ArgumentList "-NoExit", "-Command", $ServerCmd

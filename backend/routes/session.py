@@ -365,12 +365,13 @@ def reset_progress():
     from models.question_attempt import QuestionAttempt
     from models.user_profile import UserProfile
     from extensions import db
+    from sqlalchemy.orm.attributes import flag_modified
 
     try:
         user_id = request.user_id
 
-        # Deactivate all sessions
-        Session.query.filter_by(user_id=user_id).update({'is_active': False})
+        # Delete all sessions
+        Session.query.filter_by(user_id=user_id).delete()
 
         # Delete all question attempts
         QuestionAttempt.query.filter_by(user_id=user_id).delete()
@@ -378,11 +379,14 @@ def reset_progress():
         # Reset user profile
         profile = UserProfile.query.filter_by(user_id=user_id).first()
         if profile:
+            from datetime import datetime
             profile.overall_performance_score = 0.0
             profile.total_questions_answered = 0
             profile.topic_scores = {}
             profile.weak_areas = []
-            profile.last_updated = None
+            profile.last_updated = datetime.utcnow()
+            flag_modified(profile, 'topic_scores')
+            flag_modified(profile, 'weak_areas')
 
         db.session.commit()
 
@@ -395,6 +399,6 @@ def reset_progress():
         return jsonify({
             'error': {
                 'code': 'INTERNAL_ERROR',
-                'message': 'An error occurred while resetting progress'
+                'message': f'An error occurred while resetting progress: {str(e)}'
             }
         }), 500

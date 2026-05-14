@@ -54,16 +54,6 @@
       <mat-icon aria-hidden="true">menu_book</mat-icon>
       Study
     </a>
-
-    <a
-      mat-button
-      routerLink="/admin"
-      routerLinkActive="nav-active"
-      aria-label="Settings"
-    >
-      <mat-icon aria-hidden="true">settings</mat-icon>
-      Settings
-    </a>
   </nav>
 
   <!-- User menu -->
@@ -80,6 +70,10 @@
     <button mat-menu-item routerLink="/dashboard" aria-label="View dashboard">
       <mat-icon aria-hidden="true">bar_chart</mat-icon>
       <span>Dashboard</span>
+    </button>
+    <button mat-menu-item routerLink="/admin" aria-label="Settings">
+      <mat-icon aria-hidden="true">settings</mat-icon>
+      <span>Settings</span>
     </button>
     <mat-divider></mat-divider>
     <!-- Logout button (Requirement 14.15) -->
