@@ -1,7 +1,8 @@
 """
 Flask application factory for AWS Cloud Practitioner Exam Practice Application.
 """
-from flask import Flask
+import os
+from flask import Flask, send_from_directory
 from flask_cors import CORS
 from config import Config
 from extensions import db, login_manager
@@ -10,28 +11,31 @@ from extensions import db, login_manager
 def create_app(config_class=Config):
     """
     Create and configure the Flask application.
-    
-    Args:
-        config_class: Configuration class to use
-        
-    Returns:
-        Configured Flask application instance
     """
-    app = Flask(__name__)
+    # Resolve the Angular production build directory
+    frontend_dist = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        'frontend', 'dist', 'frontend', 'browser'
+    )
+
+    app = Flask(
+        __name__,
+        static_folder=frontend_dist,
+        static_url_path=''
+    )
     app.config.from_object(config_class)
-    
-    # Initialize extensions with app
+
+    # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.session_protection = 'strong'
-    login_manager.login_view = None  # API doesn't redirect, returns 401
-    
-    # Configure user_loader for Flask-Login
+    login_manager.login_view = None
+
     @login_manager.user_loader
     def load_user(user_id):
         from models.user import User
         return User.query.get(int(user_id))
-    
+
     CORS(app, resources={
         r"/api/*": {
             "origins": app.config['CORS_ORIGINS'],
@@ -40,8 +44,8 @@ def create_app(config_class=Config):
             "supports_credentials": True
         }
     })
-    
-    # Register blueprints
+
+    # Register API blueprints
     from routes.auth import auth_bp
     from routes.session import session_bp
     from routes.question import question_bp
@@ -49,7 +53,7 @@ def create_app(config_class=Config):
     from routes.drill import drill_bp
     from routes.study import study_bp
     from routes.admin import admin_bp
-    
+
     app.register_blueprint(auth_bp, url_prefix='/api')
     app.register_blueprint(session_bp, url_prefix='/api/session')
     app.register_blueprint(question_bp, url_prefix='/api/question')
@@ -57,7 +61,17 @@ def create_app(config_class=Config):
     app.register_blueprint(drill_bp, url_prefix='/api/drill')
     app.register_blueprint(study_bp, url_prefix='/api/study')
     app.register_blueprint(admin_bp, url_prefix='/api/questions')
-    
+
+    # Serve Angular app for all non-API routes (SPA fallback)
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_frontend(path):
+        # Serve the file if it exists (JS, CSS, assets, etc.)
+        if path and os.path.exists(os.path.join(frontend_dist, path)):
+            return send_from_directory(frontend_dist, path)
+        # Fall back to index.html for all Angular client-side routes
+        return send_from_directory(frontend_dist, 'index.html')
+
     return app
 
 
