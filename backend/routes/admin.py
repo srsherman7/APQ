@@ -1,18 +1,15 @@
 """
-Admin routes for question management - batch import and filtering.
-
-These endpoints are registered under the /api/questions prefix via admin_bp.
-- POST /api/questions/import  - batch import questions
-- GET  /api/questions/filter  - filter questions by topic and/or difficulty
-- GET  /api/health            - health check (no authentication required)
-
-Requirements: 11.10, 11.12, 13.1-13.14
+Admin routes for question management - batch import, filtering, and reseeding.
 """
+import os
+import subprocess
+import sys
 from flask import Blueprint, request, jsonify
 from functools import wraps
 from services.auth_service import AuthService
 from services.question_parser import QuestionParser, ValidationError
 from models.question import Question
+from extensions import db
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -284,6 +281,87 @@ def filter_questions():
                 'code': 'INTERNAL_ERROR',
                 'message': 'An error occurred while filtering questions'
             }
+        }), 500
+
+
+@admin_bp.route('/reseed', methods=['POST'])
+@require_auth
+def reseed_questions():
+    """
+    Regenerate the question bank from scratch.
+
+    Runs gen.py to produce a fresh questions.json, then deactivates all
+    existing questions and imports the new set.
+
+    Response:
+        200: {
+            "imported_count": int,
+            "deactivated_count": int,
+            "message": string
+        }
+        500: {
+            "error": { "code": "RESEED_FAILED", "message": string }
+        }
+    """
+    try:
+        seed_dir  = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'seed_data')
+        gen_script = os.path.join(seed_dir, 'gen.py')
+        json_path  = os.path.join(seed_dir, 'questions.json')
+
+        # Step 1 — regenerate questions.json
+        result = subprocess.run(
+            [sys.executable, gen_script],
+            capture_output=True, text=True, timeout=30
+        )
+        if result.returncode != 0:
+            return jsonify({
+                'error': {
+                    'code': 'RESEED_FAILED',
+                    'message': f'gen.py failed: {result.stderr.strip()}'
+                }
+            }), 500
+
+        # Step 2 — deactivate all existing questions
+        deactivated = Question.query.filter_by(is_active=True).count()
+        Question.query.update({'is_active': False})
+        db.session.commit()
+
+        # Step 3 — import fresh questions
+        import json
+        with open(json_path, encoding='utf-8') as f:
+            questions_data = json.load(f)
+
+        count = 0
+        for q in questions_data:
+            db.session.add(Question(
+                question_text=q['question_text'],
+                options=q['options'],
+                correct_answer=q['correct_answer'],
+                explanation=q['explanation'],
+                memory_technique=q['memory_technique'],
+                topic_area=q['topic_area'],
+                difficulty_level=q['difficulty_level'],
+                it_context_mapping=q.get('it_context_mapping'),
+                is_active=True
+            ))
+            count += 1
+
+        db.session.commit()
+
+        return jsonify({
+            'imported_count': count,
+            'deactivated_count': deactivated,
+            'message': f'Question bank refreshed: {deactivated} old questions deactivated, {count} new questions imported.'
+        }), 200
+
+    except subprocess.TimeoutExpired:
+        return jsonify({
+            'error': {'code': 'RESEED_FAILED', 'message': 'gen.py timed out after 30 seconds.'}
+        }), 500
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'error': {'code': 'RESEED_FAILED', 'message': str(e)}
         }), 500
 
 

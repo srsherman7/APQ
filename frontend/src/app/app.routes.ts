@@ -68,6 +68,15 @@ export const routes: Routes = [
             m => m.StudyMaterialsComponent
           )
       },
+
+      // Admin panel
+      {
+        path: 'admin',
+        loadComponent: () =>
+          import('./components/admin-panel/admin-panel.component').then(
+            m => m.AdminPanelComponent
+          )
+      },
     ]
   },
 

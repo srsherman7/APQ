@@ -346,3 +346,55 @@ def save_session():
                 'message': 'An error occurred while saving session'
             }
         }), 500
+
+
+@session_bp.route('/reset', methods=['POST'])
+@require_auth
+def reset_progress():
+    """
+    Reset all progress for the authenticated user.
+
+    Deactivates all sessions, deletes all question attempts, and resets
+    the user profile. The user starts fresh as if they just registered.
+
+    Response:
+        200: { "message": string }
+        500: { "error": { "code": "INTERNAL_ERROR", "message": string } }
+    """
+    from models.session import Session
+    from models.question_attempt import QuestionAttempt
+    from models.user_profile import UserProfile
+    from extensions import db
+
+    try:
+        user_id = request.user_id
+
+        # Deactivate all sessions
+        Session.query.filter_by(user_id=user_id).update({'is_active': False})
+
+        # Delete all question attempts
+        QuestionAttempt.query.filter_by(user_id=user_id).delete()
+
+        # Reset user profile
+        profile = UserProfile.query.filter_by(user_id=user_id).first()
+        if profile:
+            profile.overall_performance_score = 0.0
+            profile.total_questions_answered = 0
+            profile.topic_scores = {}
+            profile.weak_areas = []
+            profile.last_updated = None
+
+        db.session.commit()
+
+        return jsonify({
+            'message': 'All progress has been reset. You can start a new session.'
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'error': {
+                'code': 'INTERNAL_ERROR',
+                'message': 'An error occurred while resetting progress'
+            }
+        }), 500

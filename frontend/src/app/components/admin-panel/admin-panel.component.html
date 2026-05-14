@@ -1,0 +1,114 @@
+<div class="admin-container">
+
+  <div class="admin-header">
+    <mat-icon class="admin-icon" aria-hidden="true">settings</mat-icon>
+    <h1 class="admin-title">Settings</h1>
+  </div>
+
+  <mat-divider class="header-divider"></mat-divider>
+
+  <!-- ── Reset Progress card ─────────────────────────────────────────────── -->
+  <mat-card class="admin-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar class="card-icon" aria-hidden="true">restart_alt</mat-icon>
+      <mat-card-title>Reset Progress</mat-card-title>
+      <mat-card-subtitle>Start over from scratch</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <p class="card-description">
+        This will clear all your sessions, answered questions, and performance data.
+        Your account will be reset as if you just registered. This action cannot be undone.
+      </p>
+
+      <!-- Success -->
+      @if (successMessage) {
+        <div class="result-banner success" role="status" aria-live="polite">
+          <mat-icon aria-hidden="true">check_circle</mat-icon>
+          <div>
+            <strong>Done!</strong> {{ successMessage }}
+          </div>
+        </div>
+      }
+
+      <!-- Error -->
+      @if (errorMessage) {
+        <div class="result-banner error" role="alert" aria-live="assertive">
+          <mat-icon aria-hidden="true">error_outline</mat-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      <!-- Confirmation prompt -->
+      @if (confirmed && !isResetting) {
+        <div class="confirm-banner" role="alert">
+          <mat-icon aria-hidden="true">warning</mat-icon>
+          <span>This will permanently delete all your progress. Are you sure?</span>
+        </div>
+      }
+    </mat-card-content>
+
+    <mat-card-actions class="card-actions">
+      @if (successMessage) {
+        <!-- After reset, offer to start practising -->
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="goToPractice()"
+          aria-label="Start practising"
+        >
+          <ng-container>
+            <mat-icon aria-hidden="true">play_arrow</mat-icon>
+            <span>Start Practising</span>
+          </ng-container>
+        </button>
+      } @else if (!confirmed) {
+        <!-- Step 1: arm the button -->
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="onResetClick()"
+          [disabled]="isResetting"
+          aria-label="Reset all progress"
+        >
+          @if (isResetting) {
+            <mat-spinner diameter="20"></mat-spinner>
+            <span>Resetting…</span>
+          } @else {
+            <ng-container>
+              <mat-icon aria-hidden="true">restart_alt</mat-icon>
+              <span>Reset All Progress</span>
+            </ng-container>
+          }
+        </button>
+      } @else {
+        <!-- Step 2: confirm or cancel -->
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="onResetClick()"
+          [disabled]="isResetting"
+          aria-label="Confirm reset"
+        >
+          @if (isResetting) {
+            <mat-spinner diameter="20"></mat-spinner>
+            <span>Resetting…</span>
+          } @else {
+            <ng-container>
+              <mat-icon aria-hidden="true">check</mat-icon>
+              <span>Yes, Reset Everything</span>
+            </ng-container>
+          }
+        </button>
+        <button
+          mat-stroked-button
+          (click)="cancel()"
+          aria-label="Cancel"
+        >
+          Cancel
+        </button>
+      }
+    </mat-card-actions>
+  </mat-card>
+
+</div>
