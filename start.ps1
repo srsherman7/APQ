@@ -1,13 +1,36 @@
 # start.ps1 — Start the AWS Exam Practice App (backend + frontend)
+# Supports both localhost and LAN/external access automatically.
 # Run from the repo root: .\start.ps1
 
-$Root    = $PSScriptRoot
-$Backend = Join-Path $Root "backend"
+param(
+    [string]$BindIP = ""   # Override: .\start.ps1 -BindIP 0.0.0.0
+)
+
+$Root     = $PSScriptRoot
+$Backend  = Join-Path $Root "backend"
 $Frontend = Join-Path $Root "frontend"
+
+# ── Detect LAN IP ─────────────────────────────────────────────────────────────
+if ($BindIP -eq "") {
+    $BindIP = (
+        Get-NetIPAddress -AddressFamily IPv4 |
+        Where-Object { $_.IPAddress -notmatch '^(127\.|169\.254\.|172\.)' } |
+        Sort-Object PrefixLength -Descending |
+        Select-Object -First 1 -ExpandProperty IPAddress
+    )
+    if (-not $BindIP) { $BindIP = "127.0.0.1" }
+}
+
+$BackendUrl  = "http://${BindIP}:5000"
+$FrontendUrl = "http://${BindIP}:4200"
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  AWS Exam Practice App — Starting Up"   -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "  Host IP  : $BindIP"                    -ForegroundColor White
+Write-Host "  Backend  : $BackendUrl"                -ForegroundColor Green
+Write-Host "  Frontend : $FrontendUrl"               -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -23,26 +46,21 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# ── 3. Install Python dependencies if needed ─────────────────────────────────
-$ReqFile = Join-Path $Backend "requirements.txt"
+# ── 3. Install Python dependencies ───────────────────────────────────────────
 Write-Host "[1/4] Checking Python dependencies..." -ForegroundColor Yellow
-pip install -r $ReqFile -q
+pip install -r (Join-Path $Backend "requirements.txt") -q
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] pip install failed." -ForegroundColor Red
-    exit 1
+    Write-Host "[ERROR] pip install failed." -ForegroundColor Red; exit 1
 }
 Write-Host "      OK" -ForegroundColor Green
 
-# ── 4. Install Node dependencies if needed ───────────────────────────────────
+# ── 4. Install Node dependencies ─────────────────────────────────────────────
 $NodeModules = Join-Path $Frontend "node_modules"
 if (-not (Test-Path $NodeModules)) {
     Write-Host "[2/4] Installing Node dependencies (first run)..." -ForegroundColor Yellow
-    Push-Location $Frontend
-    npm install --silent
-    Pop-Location
+    Push-Location $Frontend; npm install --silent; Pop-Location
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] npm install failed." -ForegroundColor Red
-        exit 1
+        Write-Host "[ERROR] npm install failed." -ForegroundColor Red; exit 1
     }
 } else {
     Write-Host "[2/4] Node dependencies already installed." -ForegroundColor Green
@@ -85,34 +103,41 @@ with app.app_context():
 "@
 python -c $InitScript
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Database init failed." -ForegroundColor Red
-    exit 1
+    Write-Host "[ERROR] Database init failed." -ForegroundColor Red; exit 1
 }
 Write-Host "      OK" -ForegroundColor Green
 
-# ── 6. Launch backend in a new window ────────────────────────────────────────
-Write-Host "[4/4] Starting backend and frontend..." -ForegroundColor Yellow
+# ── 6. Launch backend ─────────────────────────────────────────────────────────
+Write-Host "[4/4] Launching backend and frontend..." -ForegroundColor Yellow
+
+# Pass CORS_ORIGINS so the backend accepts requests from the LAN IP
+$BackendCmd = @"
+cd '$Backend'
+`$env:CORS_ORIGINS = 'http://localhost:4200,http://${BindIP}:4200'
+Write-Host 'Backend  -> $BackendUrl' -ForegroundColor Cyan
+Write-Host 'CORS     -> ' + `$env:CORS_ORIGINS -ForegroundColor DarkGray
+python app.py
+"@
+
+Start-Process powershell -ArgumentList "-NoExit", "-Command", $BackendCmd
+
+# ── 7. Launch frontend with the correct API URL ───────────────────────────────
+# --define injects __API_BASE_URL__ into the Angular build so the app calls
+# the backend on the LAN IP rather than hardcoded localhost.
+$FrontendCmd = @"
+cd '$Frontend'
+Write-Host 'Frontend -> $FrontendUrl' -ForegroundColor Cyan
+npx ng serve --host 0.0.0.0 --port 4200 --configuration development --define '__API_BASE_URL__=""$BackendUrl""'
+"@
+
+Start-Process powershell -ArgumentList "-NoExit", "-Command", $FrontendCmd
+
 Write-Host ""
-
-Start-Process powershell -ArgumentList @(
-    "-NoExit",
-    "-Command",
-    "cd '$Backend'; Write-Host 'Backend running on http://localhost:5000' -ForegroundColor Cyan; python app.py"
-)
-
-# ── 7. Launch frontend in a new window ───────────────────────────────────────
-Start-Process powershell -ArgumentList @(
-    "-NoExit",
-    "-Command",
-    "cd '$Frontend'; Write-Host 'Frontend running on http://localhost:4200' -ForegroundColor Cyan; npm start"
-)
-
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  Backend  -> http://localhost:5000"      -ForegroundColor Green
-Write-Host "  Frontend -> http://localhost:4200"      -ForegroundColor Green
-Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "  Two terminal windows have opened."     -ForegroundColor White
+Write-Host "  Wait ~15s for Angular to compile."     -ForegroundColor White
 Write-Host ""
-Write-Host "Two terminal windows have opened." -ForegroundColor White
-Write-Host "Wait ~10 seconds for the frontend to compile, then open:" -ForegroundColor White
-Write-Host "  http://localhost:4200" -ForegroundColor Yellow
+Write-Host "  Local   : http://localhost:4200"       -ForegroundColor Green
+Write-Host "  Network : $FrontendUrl"                -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
