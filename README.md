@@ -400,3 +400,5 @@ curl -X POST http://localhost:4201/api/questions/import \
 <img width="1363" height="850" alt="{DE632C62-7F7F-49A8-8880-9D85A7A25C51}" src="https://github.com/user-attachments/assets/a5b6e3a6-b729-44e3-8038-a7b4b3f7bcc7" />
 <img width="1386" height="413" alt="{A7CCEFC9-6B5E-471D-A177-A00C7EE04927}" src="https://github.com/user-attachments/assets/58779f2a-2ecd-4a43-beee-e26aafcc64b3" />
 <img width="1390" height="946" alt="{9B3F0FB9-B96B-457F-B4A3-A666E26959E1}" src="https://github.com/user-attachments/assets/5d27effa-4af9-47de-8bfc-c746f5f0245c" />
+<img width="2526" height="1259" alt="{155926F5-1BAE-46E7-AE2D-F380C6ADE8B7}" src="https://github.com/user-attachments/assets/6bd5ae8a-0103-4a0a-8491-450e74d8b429" />
+
