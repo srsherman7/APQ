@@ -67,10 +67,17 @@ class Question(db.Model):
         Returns:
             Dictionary representation of the question
         """
+        import random
+
+        options = list(self.options)
+        if not include_answer:
+            # Shuffle options so the correct answer isn't always in the same position
+            random.shuffle(options)
+
         data = {
             'question_id': self.question_id,
             'question_text': self.question_text,
-            'options': self.options,
+            'options': options,
             'topic_area': self.topic_area,
             'difficulty_level': self.difficulty_level,
         }
