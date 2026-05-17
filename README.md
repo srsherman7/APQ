@@ -4,6 +4,45 @@ A full-stack web application for preparing for the AWS Cloud Practitioner certif
 
 ---
 
+## Disclaimer
+
+**This application is not affiliated with, endorsed by, or verified by Amazon Web Services (AWS).** It is an independent, personal study tool built for self-directed exam preparation.
+
+The question content is aggregated from publicly available AWS documentation, whitepapers, FAQs, and the official exam guide, then compiled into a structured format for adaptive practice. While every effort has been made to ensure accuracy, this tool **should not be considered a replacement for official AWS training, courses, or practice exams.**
+
+Use this application as a supplement to — not a substitute for — official preparation resources.
+
+### Official AWS Resources
+
+| Resource | Link |
+|---|---|
+| AWS Cloud Practitioner Exam Guide | https://aws.amazon.com/certification/certified-cloud-practitioner/ |
+| AWS Skill Builder (free courses) | https://skillbuilder.aws/ |
+| AWS Documentation | https://docs.aws.amazon.com/ |
+| AWS Whitepapers & Guides | https://aws.amazon.com/whitepapers/ |
+| AWS Official Practice Exams | https://aws.amazon.com/certification/certification-prep/ |
+| AWS Well-Architected Framework | https://aws.amazon.com/architecture/well-architected/ |
+| AWS FAQs (by service) | https://aws.amazon.com/faqs/ |
+
+### Keeping Content Current
+
+AWS services and exam content evolve over time. If you encounter outdated material or want to add questions reflecting new services or exam updates, you can import fresh questions via the API:
+
+```bash
+curl -X POST http://localhost:4201/api/questions/import \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "questions": [ { ... } ] }'
+```
+
+See the [Adding Questions](#adding-questions) section for the full schema.
+
+### Future Vision
+
+This application is architected as a general-purpose adaptive learning system. The AWS Cloud Practitioner content is one course within what could become a broader **Learning Management System (LMS)**. The question engine, adaptive difficulty, session management, analytics, and drill mode are all content-agnostic — they work with any subject matter that can be expressed as multiple-choice questions with explanations. Future iterations may expand this into a multi-course LMS platform.
+
+---
+
 ## Table of Contents
 
 - [Features](#features)
@@ -400,5 +439,3 @@ curl -X POST http://localhost:4201/api/questions/import \
 <img width="1363" height="850" alt="{DE632C62-7F7F-49A8-8880-9D85A7A25C51}" src="https://github.com/user-attachments/assets/a5b6e3a6-b729-44e3-8038-a7b4b3f7bcc7" />
 <img width="1386" height="413" alt="{A7CCEFC9-6B5E-471D-A177-A00C7EE04927}" src="https://github.com/user-attachments/assets/58779f2a-2ecd-4a43-beee-e26aafcc64b3" />
 <img width="1390" height="946" alt="{9B3F0FB9-B96B-457F-B4A3-A666E26959E1}" src="https://github.com/user-attachments/assets/5d27effa-4af9-47de-8bfc-c746f5f0245c" />
-<img width="2526" height="1259" alt="{155926F5-1BAE-46E7-AE2D-F380C6ADE8B7}" src="https://github.com/user-attachments/assets/6bd5ae8a-0103-4a0a-8491-450e74d8b429" />
-
