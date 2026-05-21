@@ -161,40 +161,24 @@ def get_study_guide(topic):
 def get_cheatsheets():
     """
     List available pre-generated cheatsheets.
-    
-    Headers:
-        Authorization: Bearer <session_token>
-    
-    Response:
-        200: {
-            "cheatsheets": [
-                {
-                    "id": string,
-                    "title": string,
-                    "topic_area": string,
-                    "description": string
-                }
-            ]
-        }
-        401: {
-            "error": {
-                "code": "UNAUTHORIZED" | "INVALID_TOKEN_FORMAT" | "SESSION_EXPIRED",
-                "message": string
-            }
-        }
-        500: {
-            "error": {
-                "code": "INTERNAL_ERROR",
-                "message": string
-            }
-        }
+    Accepts optional module_id query param to filter by module's topic areas.
     """
     try:
+        module_id = request.args.get('module_id', type=int)
+        
         # Initialize generator
         generator = StudyGuideGenerator()
         
         # Get pre-generated cheatsheets
         cheatsheets = generator.get_pregenerated_cheatsheets()
+        
+        # Filter by module's topic areas if module_id provided
+        if module_id:
+            from models.module import Module
+            module = Module.query.get(module_id)
+            if module and module.topic_areas:
+                topic_set = set(module.topic_areas)
+                cheatsheets = [cs for cs in cheatsheets if cs.topic_area in topic_set]
         
         # Convert to dict format
         cheatsheets_data = [

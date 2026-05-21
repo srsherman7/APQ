@@ -88,7 +88,7 @@ export class LoginComponent implements OnDestroy {
         next: () => {
           // Token is stored by AuthService.login() via tap()
           // Requirement 14.13: redirect to main application on successful login
-          this.router.navigate(['/questions']);
+          this.router.navigate(['/modules']);
         },
         error: (err: HttpErrorResponse) => {
           this.isLoading = false;

@@ -14,21 +14,21 @@
       <mat-card-header>
         <mat-icon mat-card-avatar class="exam-icon" aria-hidden="true">assignment</mat-icon>
         <mat-card-title>Practice Exam</mat-card-title>
-        <mat-card-subtitle>Simulate the real AWS Cloud Practitioner exam</mat-card-subtitle>
+        <mat-card-subtitle>Simulate the real {{ activeModule?.name || 'certification' }} exam</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <div class="intro-details">
           <div class="detail-row">
             <mat-icon aria-hidden="true">quiz</mat-icon>
-            <span><strong>65 questions</strong> — randomly selected across all domains</span>
+            <span><strong>{{ activeModule?.exam_question_count || 65 }} questions</strong> — randomly selected across all domains</span>
           </div>
           <div class="detail-row">
             <mat-icon aria-hidden="true">timer</mat-icon>
-            <span><strong>90 minutes</strong> — timed just like the real exam</span>
+            <span><strong>{{ activeModule ? (activeModule.exam_time_limit_seconds / 60) : 90 }} minutes</strong> — timed just like the real exam</span>
           </div>
           <div class="detail-row">
             <mat-icon aria-hidden="true">check_circle</mat-icon>
-            <span><strong>70% to pass</strong> — you need at least 46 correct answers</span>
+            <span><strong>{{ activeModule?.exam_passing_score || 70 }}% to pass</strong> — you need at least {{ activeModule ? (activeModule.exam_question_count * activeModule.exam_passing_score / 100 | number:'1.0-0') : 46 }} correct answers</span>
           </div>
           <div class="detail-row">
             <mat-icon aria-hidden="true">navigate_next</mat-icon>

@@ -6,8 +6,8 @@
     class="app-title"
     aria-label="AWS Exam Practice – go to practice"
   >
-    <mat-icon aria-hidden="true">cloud</mat-icon>
-    <span class="title-text">AWS Exam Practice</span>
+    <mat-icon aria-hidden="true">{{ moduleService.activeModule()?.icon || 'cloud' }}</mat-icon>
+    <span class="title-text">{{ moduleService.activeModule()?.name || 'AWS Exam Practice' }}</span>
   </a>
 
   <!-- Spacer -->
@@ -84,6 +84,10 @@
     <button mat-menu-item routerLink="/admin" aria-label="Settings">
       <mat-icon aria-hidden="true">settings</mat-icon>
       <span>Settings</span>
+    </button>
+    <button mat-menu-item (click)="changeModule()" aria-label="Change module">
+      <mat-icon aria-hidden="true">swap_horiz</mat-icon>
+      <span>Change Module</span>
     </button>
     <mat-divider></mat-divider>
     <!-- Logout button (Requirement 14.15) -->

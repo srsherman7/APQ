@@ -86,11 +86,31 @@ sys.path.insert(0, r'$Backend')
 os.chdir(r'$Backend')
 from app import create_app
 from extensions import db
+from models.module import Module
 from models.question import Question
 
 app = create_app()
 with app.app_context():
     db.create_all()
+    
+    # Create Cloud Practitioner module if it doesn't exist
+    module = Module.query.filter_by(slug='cloud-practitioner').first()
+    if not module:
+        module = Module(
+            slug='cloud-practitioner',
+            name='AWS Cloud Practitioner',
+            description='Prepare for the AWS Certified Cloud Practitioner exam. Covers cloud concepts, security, technology, and billing.',
+            icon='cloud',
+            exam_question_count=65,
+            exam_time_limit_seconds=5400,
+            exam_passing_score=70.0,
+            topic_areas=['Cloud Concepts', 'Security and Compliance', 'Technology', 'Billing and Pricing'],
+        )
+        db.session.add(module)
+        db.session.commit()
+        print(f'  Created module: {module.name}')
+    
+    # Seed questions into the module
     seed_path = os.path.join(r'$Backend', 'seed_data', 'questions.json')
     with open(seed_path, encoding='utf-8') as f:
         questions = json.load(f)
@@ -98,6 +118,7 @@ with app.app_context():
     for q in questions:
         if not Question.query.filter_by(question_text=q['question_text']).first():
             db.session.add(Question(
+                module_id=module.module_id,
                 question_text=q['question_text'],
                 options=q['options'],
                 correct_answer=q['correct_answer'],
@@ -110,8 +131,51 @@ with app.app_context():
             ))
             count += 1
     db.session.commit()
-    total = Question.query.count()
-    print(f'  Seeded {count} new questions. Total in DB: {total}')
+    total = Question.query.filter_by(is_active=True).count()
+    print(f'  Seeded {count} new questions. Total active: {total}')
+    
+    # Create ML Specialty module if it doesn't exist
+    ml_module = Module.query.filter_by(slug='ml-specialty').first()
+    if not ml_module:
+        ml_module = Module(
+            slug='ml-specialty',
+            name='AWS Machine Learning Specialty',
+            description='Prepare for the AWS Certified Machine Learning - Specialty exam. Covers data engineering, EDA, modeling, and ML ops.',
+            icon='psychology',
+            exam_question_count=85,
+            exam_time_limit_seconds=10200,
+            exam_passing_score=75.0,
+            topic_areas=['Data Engineering', 'Exploratory Data Analysis', 'Modeling', 'ML Implementation and Operations'],
+        )
+        db.session.add(ml_module)
+        db.session.commit()
+        print(f'  Created module: {ml_module.name}')
+    
+    # Seed ML questions
+    import os as _os
+    ml_seed = _os.path.join(r'$Backend', 'seed_data', 'ml_questions.json')
+    if _os.path.exists(ml_seed):
+        with open(ml_seed, encoding='utf-8') as f:
+            ml_qs = json.load(f)
+        ml_count = 0
+        for q in ml_qs:
+            if not Question.query.filter_by(question_text=q['question_text']).first():
+                db.session.add(Question(
+                    module_id=ml_module.module_id,
+                    question_text=q['question_text'],
+                    options=q['options'],
+                    correct_answer=q['correct_answer'],
+                    explanation=q['explanation'],
+                    memory_technique=q['memory_technique'],
+                    topic_area=q['topic_area'],
+                    difficulty_level=q['difficulty_level'],
+                    it_context_mapping=q.get('it_context_mapping'),
+                    is_active=True
+                ))
+                ml_count += 1
+        db.session.commit()
+        if ml_count > 0:
+            print(f'  Seeded {ml_count} ML questions')
 "@
 python -c $InitScript
 if ($LASTEXITCODE -ne 0) {

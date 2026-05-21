@@ -24,6 +24,7 @@ import { FeedbackComponent } from '../feedback/feedback.component';
 import { QuestionService, QuestionData, FeedbackData, SubmitAnswerResponse } from '../../services/question.service';
 import { SessionService, SessionState } from '../../services/session.service';
 import { AnalyticsService } from '../../services/analytics.service';
+import { ModuleService } from '../../services/module.service';
 
 type ViewState = 'loading' | 'question' | 'feedback' | 'session-complete' | 'error';
 
@@ -65,6 +66,10 @@ export class PracticeSessionComponent implements OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroy$ = new Subject<void>();
+
+  // Module service for getting active module ID
+  private readonly moduleService = inject(ModuleService);
+  private get moduleId(): number { return this.moduleService.getActiveModuleId() || 1; }
 
   // ── View state ─────────────────────────────────────────────────────────────
 
@@ -145,7 +150,7 @@ export class PracticeSessionComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
 
     this.sessionService
-      .createSession()
+      .createSession(this.moduleId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (session) => {
@@ -186,7 +191,7 @@ export class PracticeSessionComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
 
     this.sessionService
-      .restoreSession()
+      .restoreSession(this.moduleId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (session) => {
@@ -197,7 +202,7 @@ export class PracticeSessionComponent implements OnInit, OnDestroy {
         error: () => {
           // No existing session — create a new one
           this.sessionService
-            .createSession()
+            .createSession(this.moduleId)
             .pipe(takeUntil(this.destroy$))
             .subscribe({
               next: (session) => {

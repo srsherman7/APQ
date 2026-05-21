@@ -29,6 +29,7 @@ import {
   Cheatsheet,
   ApiError
 } from '../../services/study.service';
+import { ModuleService } from '../../services/module.service';
 
 // ─── Local interfaces matching the backend's format_study_content response ───
 
@@ -107,9 +108,11 @@ export interface FormattedStudyGuide {
 })
 export class StudyMaterialsComponent implements OnInit, OnDestroy {
   private readonly studyService = inject(StudyService);
+  private readonly moduleService = inject(ModuleService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroy$ = new Subject<void>();
+  private get moduleId(): number { return this.moduleService.getActiveModuleId() || 1; }
 
   // ── Cheatsheet state ──────────────────────────────────────────────────────
 
@@ -137,12 +140,14 @@ export class StudyMaterialsComponent implements OnInit, OnDestroy {
   selectedTopic: string | null = null;
 
   /** Available topic areas for on-demand study guide generation */
-  readonly topicAreas: string[] = [
-    'Cloud Concepts',
-    'Security and Compliance',
-    'Technology',
-    'Billing and Pricing',
-  ];
+  get topicAreas(): string[] {
+    return this.moduleService.activeModule()?.topic_areas || [
+      'Cloud Concepts',
+      'Security and Compliance',
+      'Technology',
+      'Billing and Pricing',
+    ];
+  }
 
   /** Column definitions for the comparison table */
   readonly comparisonColumns: string[] = ['it_concept', 'aws_service', 'key_difference'];
@@ -167,7 +172,7 @@ export class StudyMaterialsComponent implements OnInit, OnDestroy {
     this.cheatsheetsError = null;
 
     this.studyService
-      .getCheatsheets()
+      .getCheatsheets(this.moduleId)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {

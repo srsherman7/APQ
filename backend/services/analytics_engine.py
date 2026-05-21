@@ -80,33 +80,26 @@ class AnalyticsEngine:
         score = (correct / total) * 100
         return round(score, 1), correct, total
     
-    def identify_weak_areas(self, user_id: int) -> List[Dict]:
+    def identify_weak_areas(self, user_id: int, module_id: int = None) -> List[Dict]:
         """
-        Identify topics needing improvement.
-        
-        Args:
-            user_id: The user ID
-        
-        Returns:
-            List of weak areas with topic, score, and attempt count
-            Format: [{"topic": str, "score": float, "attempt_count": int}]
-            Only includes topics with <70% score and ≥5 attempts
-        
-        Requirements: 5.6, 6.2
+        Identify topics needing improvement, optionally scoped to a module.
         """
         # Get all unique topics the user has attempted
-        topics = db.session.query(Question.topic_area).join(
+        query = db.session.query(Question.topic_area).join(
             QuestionAttempt, Question.question_id == QuestionAttempt.question_id
         ).filter(
             QuestionAttempt.user_id == user_id
-        ).distinct().all()
+        )
+        if module_id:
+            query = query.filter(Question.module_id == module_id)
+        
+        topics = query.distinct().all()
         
         weak_areas = []
         
         for (topic,) in topics:
             score, correct, total = self.calculate_topic_score(user_id, topic)
             
-            # Check if this is a weak area: <70% score and ≥5 attempts
             if total >= 5 and score < 70.0:
                 weak_areas.append({
                     'topic': topic,
@@ -115,9 +108,7 @@ class AnalyticsEngine:
                     'correct_count': correct
                 })
         
-        # Sort by score (lowest first) for prioritization
         weak_areas.sort(key=lambda x: x['score'])
-        
         return weak_areas
     
     def update_user_profile(self, user_id: int, question_attempt: QuestionAttempt) -> UserProfile:
@@ -192,23 +183,15 @@ class AnalyticsEngine:
         
         return profile
     
-    def get_session_history(self, user_id: int, limit: int = 20) -> List[Dict]:
+    def get_session_history(self, user_id: int, limit: int = 20, module_id: int = None) -> List[Dict]:
         """
-        Retrieve recent session and exam data for a user.
-        
-        Args:
-            user_id: The user ID
-            limit: Maximum number of entries to retrieve (default 20)
-        
-        Returns:
-            List of session/exam dictionaries ordered by most recent first.
-        
-        Requirements: 5.8
+        Retrieve recent session and exam data for a user, optionally scoped to a module.
         """
         # Query recent practice sessions
-        sessions = Session.query.filter_by(user_id=user_id).order_by(
-            Session.created_at.desc()
-        ).limit(limit).all()
+        session_query = Session.query.filter_by(user_id=user_id)
+        if module_id:
+            session_query = session_query.filter_by(module_id=module_id)
+        sessions = session_query.order_by(Session.created_at.desc()).limit(limit).all()
         
         history = []
         
@@ -228,9 +211,10 @@ class AnalyticsEngine:
         
         # Query completed exam attempts
         from models.exam_attempt import ExamAttempt
-        exams = ExamAttempt.query.filter_by(
-            user_id=user_id, is_completed=True
-        ).order_by(ExamAttempt.completed_at.desc()).limit(limit).all()
+        exam_query = ExamAttempt.query.filter_by(user_id=user_id, is_completed=True)
+        if module_id:
+            exam_query = exam_query.filter_by(module_id=module_id)
+        exams = exam_query.order_by(ExamAttempt.completed_at.desc()).limit(limit).all()
         
         for exam in exams:
             history.append({
@@ -248,28 +232,26 @@ class AnalyticsEngine:
         history.sort(key=lambda x: x.get('date') or '', reverse=True)
         return history[:limit]
     
-    def get_user_analytics(self, user_id: int) -> Dict:
+    def get_user_analytics(self, user_id: int, module_id: int = None) -> Dict:
         """
-        Get comprehensive analytics for a user.
-        
-        Args:
-            user_id: The user ID
-        
-        Returns:
-            Dictionary with overall stats, topic breakdown, weak areas, and session history
-        
-        Requirements: 5.1-5.10
+        Get comprehensive analytics for a user, optionally scoped to a module.
         """
-        profile = UserProfile.query.filter_by(user_id=user_id).first()
+        from models.user_profile import UserProfile
         
-        if not profile:
-            # Create default profile if none exists
-            profile = UserProfile(user_id=user_id)
-            db.session.add(profile)
-            db.session.commit()
+        if module_id:
+            profile = UserProfile.query.filter_by(user_id=user_id, module_id=module_id).first()
+            if not profile:
+                profile = UserProfile(user_id=user_id, module_id=module_id)
+                db.session.add(profile)
+                db.session.commit()
+        else:
+            profile = UserProfile.query.filter_by(user_id=user_id).first()
+            if not profile:
+                profile = UserProfile(user_id=user_id, module_id=1)
+                db.session.add(profile)
+                db.session.commit()
         
-        # Get session history
-        history = self.get_session_history(user_id)
+        history = self.get_session_history(user_id, module_id=module_id)
         
         return {
             'overall_performance_score': profile.overall_performance_score,

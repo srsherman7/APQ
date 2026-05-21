@@ -1,0 +1,77 @@
+<div class="module-select-container">
+
+  <div class="page-header">
+    <h1 class="page-title">Choose a Module</h1>
+    <p class="page-subtitle">Select a certification to practice</p>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading) {
+    <div class="loading-overlay">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Loading modules…</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!isLoading && errorMessage) {
+    <div class="error-banner">
+      <mat-icon aria-hidden="true">error_outline</mat-icon>
+      <span>{{ errorMessage }}</span>
+    </div>
+  }
+
+  <!-- Module grid -->
+  @if (!isLoading && modules.length > 0) {
+    <div class="module-grid">
+      @for (module of modules; track module.module_id) {
+        <mat-card class="module-card" (click)="selectModule(module)" tabindex="0" role="button"
+          [attr.aria-label]="'Select ' + module.name">
+          <mat-card-header>
+            <mat-icon mat-card-avatar class="module-icon" aria-hidden="true">{{ module.icon }}</mat-icon>
+            <mat-card-title>{{ module.name }}</mat-card-title>
+            <mat-card-subtitle>{{ module.question_count }} questions</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="module-description">{{ module.description }}</p>
+            <div class="module-meta">
+              <div class="meta-item">
+                <mat-icon aria-hidden="true">quiz</mat-icon>
+                <span>{{ module.exam_question_count }} exam questions</span>
+              </div>
+              <div class="meta-item">
+                <mat-icon aria-hidden="true">timer</mat-icon>
+                <span>{{ formatTime(module.exam_time_limit_seconds) }} time limit</span>
+              </div>
+              <div class="meta-item">
+                <mat-icon aria-hidden="true">check_circle</mat-icon>
+                <span>{{ module.exam_passing_score }}% to pass</span>
+              </div>
+            </div>
+            <div class="topic-chips">
+              @for (topic of module.topic_areas; track topic) {
+                <mat-chip class="topic-chip">{{ topic }}</mat-chip>
+              }
+            </div>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-raised-button color="primary" (click)="selectModule(module); $event.stopPropagation()">
+              <mat-icon aria-hidden="true">play_arrow</mat-icon>
+              Start Practising
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+    </div>
+  }
+
+  <!-- No modules -->
+  @if (!isLoading && modules.length === 0 && !errorMessage) {
+    <div class="empty-state">
+      <mat-icon class="empty-icon" aria-hidden="true">school</mat-icon>
+      <h2>No modules available</h2>
+      <p>Check back later for new certification modules.</p>
+    </div>
+  }
+
+</div>

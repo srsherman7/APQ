@@ -36,24 +36,28 @@ def require_auth(f):
 @require_auth
 def start_exam():
     """
-    Start a new timed exam. Selects 65 random questions across all topics
-    and difficulty levels, weighted to match the real exam distribution.
-
-    Response 201: { exam: ExamAttempt, questions: [...] }
+    Start a new timed exam. Selects questions from the specified module
+    based on its exam configuration and topic distribution.
     """
     try:
         user_id = request.user_id
+        data = request.get_json(silent=True) or {}
+        module_id = data.get('module_id', 1)
 
-        # Check for an in-progress exam
+        # Get module config
+        from models.module import Module as ModuleModel
+        module = ModuleModel.query.get(module_id)
+        if not module:
+            return jsonify({'error': {'code': 'NOT_FOUND', 'message': 'Module not found'}}), 404
+
+        # Check for an in-progress exam in this module
         active_exam = ExamAttempt.query.filter_by(
-            user_id=user_id, is_completed=False
+            user_id=user_id, module_id=module_id, is_completed=False
         ).first()
         if active_exam:
-            # Return the existing in-progress exam
             questions = Question.query.filter(
                 Question.question_id.in_(active_exam.question_ids)
             ).all()
-            # Maintain order
             q_map = {q.question_id: q for q in questions}
             ordered = [q_map[qid] for qid in active_exam.question_ids if qid in q_map]
             return jsonify({
@@ -62,41 +66,37 @@ def start_exam():
                 'message': 'Resumed in-progress exam'
             }), 200
 
-        # Select 65 questions with exam-like distribution:
-        # Cloud Concepts ~24%, Security ~30%, Technology ~34%, Billing ~12%
-        distribution = {
-            'Cloud Concepts': 16,
-            'Security and Compliance': 20,
-            'Technology': 22,
-            'Billing and Pricing': 7,
-        }
+        # Select questions based on module's topic areas and exam_question_count
+        topic_areas = module.topic_areas or []
+        total_needed = module.exam_question_count
+        
+        # Distribute evenly across topics (with remainder going to first topics)
+        per_topic = total_needed // len(topic_areas) if topic_areas else total_needed
+        remainder = total_needed % len(topic_areas) if topic_areas else 0
 
         selected_ids = []
-        for topic, count in distribution.items():
+        for i, topic in enumerate(topic_areas):
+            count = per_topic + (1 if i < remainder else 0)
             pool = Question.query.filter_by(
-                topic_area=topic, is_active=True
+                topic_area=topic, module_id=module_id, is_active=True
             ).all()
-            if len(pool) < count:
-                sample = pool
-            else:
-                sample = random.sample(pool, count)
+            sample = random.sample(pool, min(count, len(pool)))
             selected_ids.extend([q.question_id for q in sample])
 
-        # Shuffle the final selection
         random.shuffle(selected_ids)
 
         # Create exam attempt
         exam = ExamAttempt(
             user_id=user_id,
+            module_id=module_id,
             question_ids=selected_ids,
             answers={},
             total_questions=len(selected_ids),
-            time_limit_seconds=5400,  # 90 minutes
+            time_limit_seconds=module.exam_time_limit_seconds,
         )
         db.session.add(exam)
         db.session.commit()
 
-        # Fetch questions in order
         questions = Question.query.filter(
             Question.question_id.in_(selected_ids)
         ).all()
@@ -106,7 +106,7 @@ def start_exam():
         return jsonify({
             'exam': exam.to_dict(),
             'questions': [q.to_dict(include_answer=False) for q in ordered],
-            'message': f'Exam started with {len(selected_ids)} questions. You have 90 minutes.'
+            'message': f'Exam started with {len(selected_ids)} questions. You have {module.exam_time_limit_seconds // 60} minutes.'
         }), 201
 
     except Exception as e:

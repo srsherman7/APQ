@@ -12,6 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { AuthService } from '../../services/auth.service';
+import { ModuleService } from '../../services/module.service';
 
 /**
  * NavShellComponent provides the application shell: top navigation bar
@@ -42,6 +43,13 @@ export class NavShellComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
+  readonly moduleService = inject(ModuleService);
+
+  /** Navigate back to module selection */
+  changeModule(): void {
+    this.moduleService.clearActiveModule();
+    this.router.navigate(['/modules']);
+  }
 
   /**
    * Logs the user out and redirects to /login.

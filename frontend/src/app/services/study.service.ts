@@ -133,9 +133,10 @@ export class StudyService {
    *
    * Requirements: 7.1, 7.6, 7.9, 9.7
    */
-  getCheatsheets(): Observable<CheatsheetsResponse> {
+  getCheatsheets(moduleId?: number): Observable<CheatsheetsResponse> {
+    const params = moduleId ? `?module_id=${moduleId}` : '';
     return this.http
-      .get<CheatsheetsResponse>(`${this.baseUrl}/study/cheatsheets`)
+      .get<CheatsheetsResponse>(`${this.baseUrl}/study/cheatsheets${params}`)
       .pipe(
         timeout(this.CHEATSHEETS_TIMEOUT_MS),
         retry({

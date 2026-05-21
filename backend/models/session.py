@@ -26,6 +26,7 @@ class Session(db.Model):
     
     session_id = db.Column(db.String(36), primary_key=True)  # UUID
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False, index=True)
+    module_id = db.Column(db.Integer, db.ForeignKey('modules.module_id'), nullable=False, index=True)
     answered_question_ids = db.Column(db.JSON, default=list, nullable=False)
     current_difficulty_level = db.Column(db.Integer, default=2, nullable=False)
     current_performance_score = db.Column(db.Float, default=0.0, nullable=False)

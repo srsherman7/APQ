@@ -54,8 +54,10 @@ def create_app(config_class=Config):
     from routes.study import study_bp
     from routes.admin import admin_bp
     from routes.exam import exam_bp
+    from routes.modules import modules_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api')
+    app.register_blueprint(modules_bp, url_prefix='/api/modules')
     app.register_blueprint(session_bp, url_prefix='/api/session')
     app.register_blueprint(question_bp, url_prefix='/api/question')
     app.register_blueprint(analytics_bp, url_prefix='/api/analytics')

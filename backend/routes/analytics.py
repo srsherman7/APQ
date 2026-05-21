@@ -97,10 +97,11 @@ def get_profile():
     try:
         # Get user ID from authenticated request
         user_id = request.user_id
+        module_id = request.args.get('module_id', 1, type=int)
         
         # Get analytics using AnalyticsEngine
         analytics_engine = AnalyticsEngine()
-        analytics_data = analytics_engine.get_user_analytics(user_id)
+        analytics_data = analytics_engine.get_user_analytics(user_id, module_id=module_id)
         
         return jsonify(analytics_data), 200
         
@@ -177,8 +178,9 @@ def get_history():
             }), 400
         
         # Get session history using AnalyticsEngine
+        module_id = request.args.get('module_id', type=int)
         analytics_engine = AnalyticsEngine()
-        history = analytics_engine.get_session_history(user_id, limit)
+        history = analytics_engine.get_session_history(user_id, limit, module_id=module_id)
         
         return jsonify({
             'sessions': history

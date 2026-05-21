@@ -28,6 +28,7 @@ class ExamAttempt(db.Model):
 
     exam_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False, index=True)
+    module_id = db.Column(db.Integer, db.ForeignKey('modules.module_id'), nullable=False, index=True)
     started_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     completed_at = db.Column(db.DateTime)
     time_limit_seconds = db.Column(db.Integer, nullable=False, default=5400)
