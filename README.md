@@ -64,16 +64,19 @@ This application is architected as a general-purpose adaptive learning system. T
 ## Features
 
 - **472 curated questions** — covering all four exam domains with balanced answer options (no length-based guessing)
+- **Exam mode** — timed 65-question practice exam simulating the real AWS Cloud Practitioner exam (90 minutes, 70% to pass)
 - **Adaptive difficulty** — starts at level 2, adjusts ±1 per answer (range 1–5)
 - **Randomised options** — answer positions are shuffled on every question serve
 - **Immediate feedback** — correct answer, explanation, memory technique, and IT-to-AWS context mapping
 - **Session persistence** — progress saves automatically; resume where you left off
-- **Performance dashboard** — overall score, per-topic breakdown, weak area identification, session history
+- **Performance dashboard** — overall score, per-topic breakdown, weak area identification, unified session/exam history
 - **Drill mode** — focused practice on topics where your score is below 70% (requires ≥5 attempts in a topic)
 - **Study materials** — on-demand study guides and pre-generated cheatsheets for all exam domains
-- **Reset progress** — clear all history and start fresh from the Settings menu
+- **Reset progress** — clear all history and start fresh from the Settings menu (per-user, profile icon → Settings)
 - **Single-port deployment** — Flask serves both the API and the Angular production build on one port (4201)
+- **Turso database support** — optional remote libSQL database for cloud deployments (falls back to local SQLite)
 - **LAN/external access** — auto-detects your network IP; works through DDNS with port forwarding
+- **Render.com ready** — includes `build.sh` and `render.yaml` for one-click cloud deployment
 - **Responsive UI** — works on desktop, tablet, and mobile (375px and up)
 - **Auth** — registration, login with rate limiting (5 attempts / 15 min), 24-hour session tokens
 
@@ -85,7 +88,7 @@ This application is architected as a general-purpose adaptive learning system. T
 |---|---|
 | Frontend | Angular 19, Angular Material 19, RxJS 7.8, TypeScript 5.7 |
 | Backend | Python 3.10+, Flask 3.0, SQLAlchemy 2.0, Flask-Login 0.6 |
-| Database | SQLite (development) / PostgreSQL (production) |
+| Database | SQLite (local) / Turso libSQL (cloud) / PostgreSQL (production) |
 | Auth | bcrypt password hashing, Bearer token sessions |
 | Deployment | Single process — Flask serves API + static Angular build |
 
@@ -111,7 +114,8 @@ APQ/
 │   │   ├── question.py         # Includes option shuffling on serve
 │   │   ├── session.py
 │   │   ├── question_attempt.py
-│   │   └── user_profile.py
+│   │   ├── user_profile.py
+│   │   └── exam_attempt.py     # Timed exam attempts (65 questions, 90 min)
 │   │
 │   ├── routes/                 # Flask blueprints (API endpoints)
 │   │   ├── auth.py             # /api/register, /api/login, /api/logout
@@ -120,7 +124,8 @@ APQ/
 │   │   ├── analytics.py        # /api/analytics/*
 │   │   ├── drill.py            # /api/drill/*
 │   │   ├── study.py            # /api/study/*
-│   │   └── admin.py            # /api/questions/*
+│   │   ├── admin.py            # /api/questions/*
+│   │   └── exam.py             # /api/exam/* (timed practice exams)
 │   │
 │   ├── services/               # Business logic
 │   │   ├── auth_service.py
@@ -173,8 +178,9 @@ APQ/
                 ├── practice-session/       # Question → feedback loop
                 ├── question/
                 ├── feedback/
-                ├── analytics-dashboard/
+                ├── analytics-dashboard/    # Unified history (practice + drill + exam)
                 ├── drill-mode/
+                ├── exam-mode/              # Timed 65-question practice exam
                 ├── study-materials/
                 └── admin-panel/            # Settings (reset progress)
 ```
@@ -291,15 +297,24 @@ Copy `backend/.env.example` to `backend/.env` and adjust as needed.
 | Variable | Default | Description |
 |---|---|---|
 | `SECRET_KEY` | `dev-secret-key-change-in-production` | Flask secret key — **change in production** |
-| `DATABASE_URI` | `sqlite:///aws_exam_practice.db` | SQLAlchemy connection string |
+| `DATABASE_URI` | `sqlite:///aws_exam_practice.db` | SQLAlchemy connection string (local fallback) |
+| `TURSO_DATABASE_URL` | *(empty)* | Turso libSQL URL (e.g. `libsql://your-db.turso.io`) |
+| `TURSO_AUTH_TOKEN` | *(empty)* | Turso authentication token |
 | `CORS_ORIGINS` | `http://localhost:4200` | Comma-separated allowed origins (overridden by `start.ps1`) |
 | `SESSION_COOKIE_SECURE` | `False` | Set to `True` in production (requires HTTPS) |
 
-For PostgreSQL:
-```
+**Database options (choose one):**
+
+```bash
+# Option 1: Local SQLite (default — no config needed)
+
+# Option 2: Turso (remote libSQL — requires sqlalchemy-libsql on Linux)
+TURSO_DATABASE_URL=libsql://your-database.turso.io
+TURSO_AUTH_TOKEN=your-auth-token
+
+# Option 3: PostgreSQL
 DATABASE_URI=postgresql://user:password@localhost:5432/aws_exam_practice
 ```
-Uncomment `psycopg2-binary` in `requirements.txt` and reinstall.
 
 ---
 
@@ -357,6 +372,16 @@ Authorization: Bearer <session_token>
 |---|---|---|
 | `GET` | `/api/study/guide/<topic>` | Generate study guide (up to 30s) |
 | `GET` | `/api/study/cheatsheets` | List pre-generated cheatsheets |
+
+### Exam Mode
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/exam/start` | Start a timed 65-question exam (or resume in-progress) |
+| `POST` | `/api/exam/answer` | Save an answer `{ exam_id, question_id, answer }` |
+| `POST` | `/api/exam/submit` | Submit exam for grading |
+| `GET` | `/api/exam/history` | List all completed exam attempts |
+| `GET` | `/api/exam/result/<id>` | Detailed results with correct answers for review |
 
 ---
 
@@ -421,13 +446,14 @@ curl -X POST http://localhost:4201/api/questions/import \
 ## Production Notes
 
 1. **Secret key** — set a strong random `SECRET_KEY`; never use the default
-2. **Database** — switch to PostgreSQL via `DATABASE_URI` for concurrent users
+2. **Database** — switch to Turso (set `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`) or PostgreSQL via `DATABASE_URI`
 3. **HTTPS** — set `SESSION_COOKIE_SECURE=True` and serve behind a reverse proxy
 4. **WSGI server** — replace `python app.py` with Gunicorn:
    ```bash
-   gunicorn -w 4 -b 0.0.0.0:4201 "app:create_app()"
+   gunicorn -w 4 -b 0.0.0.0:$PORT "app:create_app()"
    ```
-5. **Port** — the app runs on port 4201 by default (configurable in `app.py`)
+5. **Port** — the app uses `PORT` env var (Render sets this automatically) or defaults to 4201
+6. **Render.com deployment** — the repo includes `build.sh` and `render.yaml`. Set Build Command to `chmod +x build.sh && ./build.sh` and Start Command to `cd backend && gunicorn "app:create_app()" --bind 0.0.0.0:$PORT`
 
 ---
 
