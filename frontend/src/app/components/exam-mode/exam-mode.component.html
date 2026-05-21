@@ -1,0 +1,173 @@
+<div class="exam-container">
+
+  <!-- ── Loading ──────────────────────────────────────────────────────────── -->
+  @if (viewState === 'loading') {
+    <div class="loading-overlay">
+      <mat-spinner diameter="56"></mat-spinner>
+      <p class="loading-text">Preparing your exam…</p>
+    </div>
+  }
+
+  <!-- ── Intro ────────────────────────────────────────────────────────────── -->
+  @if (viewState === 'intro') {
+    <mat-card class="intro-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="exam-icon" aria-hidden="true">assignment</mat-icon>
+        <mat-card-title>Practice Exam</mat-card-title>
+        <mat-card-subtitle>Simulate the real AWS Cloud Practitioner exam</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="intro-details">
+          <div class="detail-row">
+            <mat-icon aria-hidden="true">quiz</mat-icon>
+            <span><strong>65 questions</strong> — randomly selected across all domains</span>
+          </div>
+          <div class="detail-row">
+            <mat-icon aria-hidden="true">timer</mat-icon>
+            <span><strong>90 minutes</strong> — timed just like the real exam</span>
+          </div>
+          <div class="detail-row">
+            <mat-icon aria-hidden="true">check_circle</mat-icon>
+            <span><strong>70% to pass</strong> — you need at least 46 correct answers</span>
+          </div>
+          <div class="detail-row">
+            <mat-icon aria-hidden="true">navigate_next</mat-icon>
+            <span>You can skip questions and return to them later</span>
+          </div>
+          <div class="detail-row">
+            <mat-icon aria-hidden="true">save</mat-icon>
+            <span>Answers are saved automatically as you go</span>
+          </div>
+        </div>
+
+        @if (errorMessage) {
+          <div class="error-banner">
+            <mat-icon aria-hidden="true">error_outline</mat-icon>
+            <span>{{ errorMessage }}</span>
+          </div>
+        }
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="startExam()" class="start-btn">
+          <mat-icon aria-hidden="true">play_arrow</mat-icon>
+          Start Exam
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  }
+
+  <!-- ── Exam in progress ─────────────────────────────────────────────────── -->
+  @if (viewState === 'exam' && currentQuestion) {
+    <!-- Timer + progress bar -->
+    <div class="exam-header">
+      <div class="timer" [class.timer-warning]="timeRemaining < 300" [class.timer-danger]="timeRemaining < 60">
+        <mat-icon aria-hidden="true">timer</mat-icon>
+        <span class="timer-text">{{ timerDisplay }}</span>
+      </div>
+      <div class="progress-info">
+        <span>{{ answeredCount }}/{{ questions.length }} answered</span>
+        <span>Question {{ currentIndex + 1 }} of {{ questions.length }}</span>
+      </div>
+    </div>
+    <mat-progress-bar [value]="progressPercent" color="primary"></mat-progress-bar>
+
+    <!-- Question card -->
+    <mat-card class="question-card">
+      <mat-card-content>
+        <div class="question-meta">
+          <span class="question-number">Question {{ currentIndex + 1 }}</span>
+          <span class="topic-badge">{{ currentQuestion.topic_area }}</span>
+        </div>
+
+        <p class="question-text">{{ currentQuestion.question_text }}</p>
+
+        <div class="options-list">
+          @for (option of currentQuestion.options; track option; let i = $index) {
+            <button
+              class="option-btn"
+              [class.option-selected]="getCurrentAnswer() === option"
+              (click)="selectAnswer(option)"
+            >
+              <span class="option-letter">{{ 'ABCD'[i] }}.</span>
+              <span class="option-text">{{ option }}</span>
+            </button>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Navigation -->
+    <div class="exam-nav">
+      <button mat-stroked-button (click)="prevQuestion()" [disabled]="currentIndex === 0">
+        <mat-icon aria-hidden="true">chevron_left</mat-icon>
+        Previous
+      </button>
+
+      <button mat-raised-button color="warn" (click)="submitExam()" [disabled]="isSubmitting">
+        @if (isSubmitting) {
+          <mat-spinner diameter="20"></mat-spinner>
+        } @else {
+          <mat-icon aria-hidden="true">send</mat-icon>
+        }
+        Submit Exam
+      </button>
+
+      <button mat-stroked-button (click)="nextQuestion()" [disabled]="currentIndex === questions.length - 1">
+        Next
+        <mat-icon aria-hidden="true">chevron_right</mat-icon>
+      </button>
+    </div>
+
+    <!-- Question navigator grid -->
+    <div class="question-grid">
+      @for (q of questions; track q.question_id; let i = $index) {
+        <button
+          class="grid-btn"
+          [class.grid-answered]="answers[q.question_id.toString()]"
+          [class.grid-current]="i === currentIndex"
+          (click)="goToQuestion(i)"
+          [attr.aria-label]="'Go to question ' + (i + 1)"
+        >
+          {{ i + 1 }}
+        </button>
+      }
+    </div>
+  }
+
+  <!-- ── Results ──────────────────────────────────────────────────────────── -->
+  @if (viewState === 'results' && exam) {
+    <mat-card class="results-card" [class.results-passed]="exam.passed" [class.results-failed]="!exam.passed">
+      <mat-card-content>
+        <div class="results-content">
+          <mat-icon class="results-icon" aria-hidden="true">
+            {{ exam.passed ? 'emoji_events' : 'sentiment_dissatisfied' }}
+          </mat-icon>
+          <h2 class="results-title">
+            {{ exam.passed ? 'Congratulations! You Passed!' : 'Not Quite — Keep Practising!' }}
+          </h2>
+          <div class="score-display" [class.score-pass]="exam.passed" [class.score-fail]="!exam.passed">
+            {{ exam.score }}%
+          </div>
+          <p class="results-detail">
+            {{ exam.total_correct }} out of {{ exam.total_questions }} correct
+            (passing score: 70%)
+          </p>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="results-actions">
+          <button mat-raised-button color="primary" (click)="retakeExam()">
+            <mat-icon aria-hidden="true">replay</mat-icon>
+            Take Another Exam
+          </button>
+          <button mat-stroked-button (click)="goToDashboard()">
+            <mat-icon aria-hidden="true">bar_chart</mat-icon>
+            Dashboard
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+</div>

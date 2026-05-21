@@ -53,6 +53,7 @@ def create_app(config_class=Config):
     from routes.drill import drill_bp
     from routes.study import study_bp
     from routes.admin import admin_bp
+    from routes.exam import exam_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api')
     app.register_blueprint(session_bp, url_prefix='/api/session')
@@ -61,6 +62,7 @@ def create_app(config_class=Config):
     app.register_blueprint(drill_bp, url_prefix='/api/drill')
     app.register_blueprint(study_bp, url_prefix='/api/study')
     app.register_blueprint(admin_bp, url_prefix='/api/questions')
+    app.register_blueprint(exam_bp, url_prefix='/api/exam')
 
     # Serve Angular app for all non-API routes (SPA fallback)
     @app.route('/', defaults={'path': ''})

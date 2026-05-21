@@ -69,6 +69,15 @@ export const routes: Routes = [
           )
       },
 
+      // Exam mode — timed 65-question practice exam
+      {
+        path: 'exam',
+        loadComponent: () =>
+          import('./components/exam-mode/exam-mode.component').then(
+            m => m.ExamModeComponent
+          )
+      },
+
       // Admin panel
       {
         path: 'admin',

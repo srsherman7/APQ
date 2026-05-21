@@ -1,12 +1,9 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global styles */
 
-// Import Angular Material theming
 @use '@angular/material' as mat;
 
-// Include the common styles for Angular Material
 @include mat.core();
 
-// Define a custom theme using the new M3 API
 $frontend-theme: mat.define-theme((
   color: (
     theme-type: light,
@@ -22,19 +19,12 @@ $frontend-theme: mat.define-theme((
   )
 ));
 
-// Include theme styles for all components
 html {
   @include mat.all-component-themes($frontend-theme);
 }
 
-// Global styles
 html, body {
   height: 100%;
-  margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
-}
-
-body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }

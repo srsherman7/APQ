@@ -194,20 +194,18 @@ class AnalyticsEngine:
     
     def get_session_history(self, user_id: int, limit: int = 20) -> List[Dict]:
         """
-        Retrieve recent session data for a user.
+        Retrieve recent session and exam data for a user.
         
         Args:
             user_id: The user ID
-            limit: Maximum number of sessions to retrieve (default 20)
+            limit: Maximum number of entries to retrieve (default 20)
         
         Returns:
-            List of session dictionaries with date, score, and question count
-            Format: [{"session_id": str, "date": str, "score": float, "questions_answered": int}]
-            Ordered by most recent first
+            List of session/exam dictionaries ordered by most recent first.
         
         Requirements: 5.8
         """
-        # Query recent sessions for this user
+        # Query recent practice sessions
         sessions = Session.query.filter_by(user_id=user_id).order_by(
             Session.created_at.desc()
         ).limit(limit).all()
@@ -215,10 +213,7 @@ class AnalyticsEngine:
         history = []
         
         for session in sessions:
-            # Count attempts in this session
             attempt_count = QuestionAttempt.query.filter_by(session_id=session.session_id).count()
-            
-            # Calculate session score
             score = self.calculate_performance_score(session.session_id)
             
             history.append({
@@ -227,10 +222,31 @@ class AnalyticsEngine:
                 'score': score,
                 'questions_answered': attempt_count,
                 'is_drill_mode': session.is_drill_mode,
-                'is_active': session.is_active
+                'is_active': session.is_active,
+                'mode': 'drill' if session.is_drill_mode else 'practice',
             })
         
-        return history
+        # Query completed exam attempts
+        from models.exam_attempt import ExamAttempt
+        exams = ExamAttempt.query.filter_by(
+            user_id=user_id, is_completed=True
+        ).order_by(ExamAttempt.completed_at.desc()).limit(limit).all()
+        
+        for exam in exams:
+            history.append({
+                'session_id': f'exam-{exam.exam_id}',
+                'date': exam.completed_at.isoformat() if exam.completed_at else exam.started_at.isoformat(),
+                'score': exam.score or 0.0,
+                'questions_answered': exam.total_questions,
+                'is_drill_mode': False,
+                'is_active': False,
+                'mode': 'exam',
+                'passed': exam.passed,
+            })
+        
+        # Sort combined list by date (most recent first) and trim to limit
+        history.sort(key=lambda x: x.get('date') or '', reverse=True)
+        return history[:limit]
     
     def get_user_analytics(self, user_id: int) -> Dict:
         """

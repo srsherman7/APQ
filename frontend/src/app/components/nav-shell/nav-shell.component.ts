@@ -45,7 +45,6 @@ export class NavShellComponent {
 
   /**
    * Logs the user out and redirects to /login.
-   * Requirement 14.15
    */
   logout(): void {
     this.authService.logout().subscribe({

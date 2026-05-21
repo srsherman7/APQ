@@ -29,6 +29,8 @@ export interface SessionHistoryEntry {
   questions_answered: number;
   is_drill_mode: boolean;
   is_active: boolean;
+  mode?: 'practice' | 'drill' | 'exam';
+  passed?: boolean;
 }
 
 /** Full performance profile returned by GET /api/analytics/profile. */
@@ -64,6 +66,8 @@ export interface SessionChartData {
   score: number;
   questionsAnswered: number;
   isDrillMode: boolean;
+  mode: 'practice' | 'drill' | 'exam';
+  passed?: boolean;
 }
 
 /** Transformed analytics data ready for chart components. */
@@ -227,7 +231,9 @@ export class AnalyticsService {
       date: session.date,
       score: session.score,
       questionsAnswered: session.questions_answered,
-      isDrillMode: session.is_drill_mode
+      isDrillMode: session.is_drill_mode,
+      mode: session.mode ?? (session.is_drill_mode ? 'drill' : 'practice'),
+      passed: session.passed,
     }));
   }
 
