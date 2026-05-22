@@ -49,15 +49,17 @@ This application is architected as a general-purpose adaptive learning system. T
 ## Features
 
 - **Modular architecture** — each certification is an independent module with its own questions, exam format, study materials, and progress tracking
-- **472 Cloud Practitioner questions + 285 ML Specialty questions** — balanced answer options, shuffled positions
+- **892 total questions across 3 modules** — balanced answer options, shuffled positions
 - **Timed exam mode** — simulates the real exam (question count, time limit, and passing score configured per module)
 - **Adaptive difficulty** — starts at level 2, adjusts ±1 per answer (range 1–5)
 - **Randomised options** — answer positions shuffled on every serve; distractors balanced in length
 - **Immediate feedback** — correct answer, explanation, memory technique, and IT-context mapping
 - **Performance dashboard** — per-module scores, topic breakdown, weak areas, unified session/exam history
 - **Drill mode** — per-module focused practice on topics below 70% (requires ≥5 attempts)
-- **Study materials** — per-module study guides and cheatsheets with definitions, use cases, exam scenarios, and comparison tables
+- **Study materials** — per-module study guides and cheatsheets stored in the database (not hardcoded)
 - **Module selection** — after login, choose which certification to practice; switch anytime via profile menu
+- **Self-service module creation** — create custom modules via API or standalone preparation tool
+- **Module import/export** — export modules as JSON, import into other instances
 - **Reset progress** — clear all history per-user from Settings (profile menu)
 - **Session persistence** — progress saves automatically; resume where you left off
 - **Single-port deployment** — Flask serves both the API and Angular production build on port 4201
@@ -71,10 +73,11 @@ This application is architected as a general-purpose adaptive learning system. T
 
 ## Modules
 
-| Module | Questions | Exam Format | Pass Score |
-|---|---|---|---|
-| AWS Cloud Practitioner | 472 | 65 questions / 90 min | 70% |
-| AWS Machine Learning Specialty | 285 | 85 questions / 170 min | 75% |
+| Module | Questions | Exam Format | Pass Score | Study Guides |
+|---|---|---|---|---|
+| AWS Cloud Practitioner | 472 | 65 questions / 90 min | 70% | 4 guides, 6 cheatsheets |
+| AWS Machine Learning Specialty | 285 | 85 questions / 170 min | 75% | 4 guides, 5 cheatsheets |
+| AWS Developer Associate | 135 | 65 questions / 130 min | 72% | 4 guides, 6 cheatsheets |
 
 Each module has:
 - Independent question pool across all difficulty levels (1–5)
@@ -300,6 +303,9 @@ All endpoints except `/api/register`, `/api/login`, `/api/health` require `Autho
 |---|---|---|
 | `GET` | `/api/modules/` | List all active modules |
 | `GET` | `/api/modules/<slug>` | Get module details |
+| `POST` | `/api/modules/create` | Create a new module `{ name, topic_areas, exam_question_count, ... }` |
+| `POST` | `/api/modules/<slug>/import` | Import questions into a module `{ questions: [...] }` |
+| `GET` | `/api/modules/<slug>/export` | Export all questions from a module as JSON |
 
 ### Auth
 | Method | Endpoint | Description |
@@ -353,22 +359,46 @@ All endpoints except `/api/register`, `/api/login`, `/api/health` require `Autho
 
 ## Adding a New Module
 
-1. Create a question JSON file in `backend/seed_data/`
-2. Add a `Module` row to the database:
-```python
-Module(
-    slug='solutions-architect',
-    name='AWS Solutions Architect Associate',
-    icon='architecture',
-    exam_question_count=65,
-    exam_time_limit_seconds=7800,  # 130 min
-    exam_passing_score=72.0,
-    topic_areas=['Design Resilient Architectures', 'Design High-Performing Architectures', 'Design Secure Architectures', 'Design Cost-Optimized Architectures'],
-)
+### Via API (recommended)
+
+1. Create the module:
+```bash
+POST /api/modules/create
+{
+    "name": "AWS Solutions Architect Associate",
+    "slug": "solutions-architect",
+    "icon": "architecture",
+    "exam_question_count": 65,
+    "exam_time_limit_seconds": 7800,
+    "exam_passing_score": 72.0,
+    "topic_areas": ["Design Resilient Architectures", "Design High-Performing Architectures", "Design Secure Architectures", "Design Cost-Optimized Architectures"]
+}
 ```
-3. Import questions with `module_id` pointing to the new module
-4. Add study guide content to `study_guide_generator.py` for the new topics
-5. No frontend code changes needed — the module appears automatically
+
+2. Import questions:
+```bash
+POST /api/modules/solutions-architect/import
+{ "questions": [ { ... }, { ... } ] }
+```
+
+3. Export for backup:
+```bash
+GET /api/modules/solutions-architect/export
+```
+
+### Via Standalone Tool
+
+1. Create a JSON file following `tools/module_template.json`
+2. Run the preparation tool:
+```bash
+python tools/prepare_module.py my_module.json -o my_module_ready.json
+```
+3. The tool validates questions, balances option lengths, and outputs a ready-to-import file
+4. Import via the API endpoints above
+
+### Study Content
+
+Study guides and cheatsheets are stored in the module's `study_content` database field. They can be included when creating a module or added later. No code changes needed — the frontend dynamically loads content from the active module.
 
 ---
 
@@ -401,6 +431,53 @@ Module(
 3. **HTTPS** — set `SESSION_COOKIE_SECURE=True` behind a reverse proxy
 4. **WSGI** — `gunicorn -w 4 -b 0.0.0.0:$PORT "app:create_app()"`
 5. **Render.com** — Build: `chmod +x build.sh && ./build.sh` / Start: `cd backend && gunicorn "app:create_app()" --bind 0.0.0.0:$PORT`
+
+---
+
+## Changelog
+
+### v2.0 — Modular Architecture (Current Branch)
+
+**New Features:**
+- **Module system** — complete refactor from single-cert to multi-module architecture
+- **AWS Developer Associate module** — 135 questions, 4 study guides, 6 cheatsheets, 65q/130min/72% exam
+- **AWS Machine Learning Specialty module** — 285 questions, 4 study guides, 5 cheatsheets, 85q/170min/75% exam
+- **Module creation API** — `POST /api/modules/create` for creating custom modules without code changes
+- **Module import/export API** — `POST /api/modules/<slug>/import` and `GET /api/modules/<slug>/export`
+- **Standalone preparation tool** — `tools/prepare_module.py` validates, balances, and packages question sets
+- **Module template** — `tools/module_template.json` shows the expected format for custom modules
+- **Database-stored study content** — study guides and cheatsheets stored per-module in DB (not hardcoded)
+- **Dynamic exam intro** — exam page shows module-specific question count, time limit, and pass score
+- **Dynamic study topics** — study guide buttons reflect the active module's topic areas
+- **Module selection page** — shown after login, users pick which cert to practice
+
+**Architecture Changes:**
+- Added `Module` model with exam config, topic areas, and study content
+- Added `module_id` FK to Question, Session, ExamAttempt, and UserProfile models
+- All routes accept `module_id` parameter for scoping
+- QuestionEngine, AnalyticsEngine, SessionManager all module-aware
+- Frontend services pass active module ID to all API calls
+- Module state persisted in localStorage (survives refresh)
+- UserProfile is now per-user-per-module (independent progress per cert)
+
+**Files Added:**
+- `backend/models/module.py` — Module model
+- `backend/routes/modules.py` — Module CRUD + import/export API
+- `backend/seed_data/dva_questions_gen.py` — DVA question generator
+- `backend/seed_data/dva_questions.json` — 135 DVA questions
+- `frontend/src/app/services/module.service.ts` — Active module state management
+- `frontend/src/app/components/module-select/` — Module picker component
+- `tools/prepare_module.py` — Standalone question preparation tool
+- `tools/module_template.json` — Template for custom modules
+
+### v1.0 — Single Module (Master Branch)
+
+- AWS Cloud Practitioner module with 472 questions
+- Adaptive difficulty, drill mode, exam mode, study materials
+- Single-port Flask deployment serving Angular production build
+- Turso database support for cloud deployments
+- LAN/external access with auto-detected IP
+- Reset progress, session persistence, responsive UI
 
 ---
 
