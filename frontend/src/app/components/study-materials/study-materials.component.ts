@@ -210,7 +210,7 @@ export class StudyMaterialsComponent implements OnInit, OnDestroy {
     this.studyGuide = null;
 
     this.studyService
-      .getStudyGuide(topic)
+      .getStudyGuide(topic, this.moduleId)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {

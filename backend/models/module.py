@@ -34,6 +34,7 @@ class Module(db.Model):
     exam_time_limit_seconds = db.Column(db.Integer, nullable=False, default=5400)
     exam_passing_score = db.Column(db.Float, nullable=False, default=70.0)
     topic_areas = db.Column(db.JSON, nullable=False, default=list)
+    study_content = db.Column(db.JSON, default=dict)  # Per-module study guides and cheatsheets
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 

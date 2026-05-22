@@ -117,7 +117,18 @@ def get_study_guide(topic):
         }
     """
     try:
-        # Initialize generator
+        # Check if a module_id is provided and has study_content for this topic
+        module_id = request.args.get('module_id', type=int)
+        if module_id:
+            from models.module import Module as ModuleModel
+            module = ModuleModel.query.get(module_id)
+            if module and module.study_content and topic in module.study_content:
+                # Return module-specific study content
+                return jsonify({
+                    'study_guide': module.study_content[topic]
+                }), 200
+
+        # Fall back to hardcoded generator
         generator = StudyGuideGenerator()
         
         # Generate study guide (30-second timeout enforced by service)
@@ -161,15 +172,22 @@ def get_study_guide(topic):
 def get_cheatsheets():
     """
     List available pre-generated cheatsheets.
-    Accepts optional module_id query param to filter by module's topic areas.
+    Uses module's study_content if available, falls back to hardcoded list.
     """
     try:
         module_id = request.args.get('module_id', type=int)
         
-        # Initialize generator
+        # Check module's study_content for cheatsheets first
+        if module_id:
+            from models.module import Module
+            module = Module.query.get(module_id)
+            if module and module.study_content and '_cheatsheets' in module.study_content:
+                return jsonify({
+                    'cheatsheets': module.study_content['_cheatsheets']
+                }), 200
+
+        # Fall back to hardcoded generator
         generator = StudyGuideGenerator()
-        
-        # Get pre-generated cheatsheets
         cheatsheets = generator.get_pregenerated_cheatsheets()
         
         # Filter by module's topic areas if module_id provided
@@ -180,7 +198,6 @@ def get_cheatsheets():
                 topic_set = set(module.topic_areas)
                 cheatsheets = [cs for cs in cheatsheets if cs.topic_area in topic_set]
         
-        # Convert to dict format
         cheatsheets_data = [
             {
                 'id': cs.id,
