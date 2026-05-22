@@ -407,6 +407,9 @@ Module(
 ## Screenshots
 
 <img width="757" height="573" alt="image" src="https://github.com/user-attachments/assets/3d697589-479a-4603-9ecb-0b492179efc4" />
+<img width="1552" height="753" alt="{EFF91A31-5B92-42BF-90B9-A1F635ED34AD}" src="https://github.com/user-attachments/assets/1d349b8f-8a13-42d6-90e4-970db2579c8c" />
+<img width="290" height="369" alt="{7F1F6583-FB81-465E-AC17-328D317414E4}" src="https://github.com/user-attachments/assets/f5e00e53-a15f-4a6e-b3b6-c4da57678232" />
+
 <img width="1359" height="853" alt="{0967A806-69D4-4E89-A9DE-F2EFE1BB0135}" src="https://github.com/user-attachments/assets/20a86dc4-41f1-49a6-ba96-48d39d6c955c" />
 <img width="1360" height="848" alt="{6D643D9F-7661-45A2-83AE-9658090832F9}" src="https://github.com/user-attachments/assets/ad434fd1-697d-438a-9e3b-12cd2d63660f" />
 <img width="1363" height="850" alt="{DE632C62-7F7F-49A8-8880-9D85A7A25C51}" src="https://github.com/user-attachments/assets/a5b6e3a6-b729-44e3-8038-a7b4b3f7bcc7" />
@@ -414,3 +417,5 @@ Module(
 <img width="1390" height="946" alt="{9B3F0FB9-B96B-457F-B4A3-A666E26959E1}" src="https://github.com/user-attachments/assets/5d27effa-4af9-47de-8bfc-c746f5f0245c" />
 <img width="1485" height="515" alt="{A3609826-0D9A-4616-AB51-904F7ED3430B}" src="https://github.com/user-attachments/assets/43dd8010-8a77-4581-9ffb-0ab63ab7a244" />
 <img width="1709" height="979" alt="{33332899-10EF-47FE-BA07-81AF1B50414C}" src="https://github.com/user-attachments/assets/16c06ed5-e282-477c-a68c-0723d7b6d698" />
+<img width="1865" height="1086" alt="{1509DE56-F5F5-4323-8050-138C5F02A338}" src="https://github.com/user-attachments/assets/85ab2964-230a-4790-9727-9260c70be080" />
+
