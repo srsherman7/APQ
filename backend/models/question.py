@@ -27,6 +27,7 @@ class Question(db.Model):
     __tablename__ = 'questions'
     
     question_id = db.Column(db.Integer, primary_key=True)
+    module_id = db.Column(db.Integer, db.ForeignKey('modules.module_id'), nullable=False, index=True)
     question_text = db.Column(db.Text, nullable=False)
     options = db.Column(db.JSON, nullable=False)  # Array of strings
     correct_answer = db.Column(db.String(500), nullable=False)

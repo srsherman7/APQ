@@ -25,6 +25,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { AnalyticsService, WeakArea } from '../../services/analytics.service';
 import { SessionService } from '../../services/session.service';
+import { ModuleService } from '../../services/module.service';
 import { environment } from '../../../environments/environment';
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
@@ -85,11 +86,13 @@ interface DrillDeactivateResponse {
 export class DrillModeComponent implements OnInit, OnDestroy {
   private readonly analyticsService = inject(AnalyticsService);
   private readonly sessionService = inject(SessionService);
+  private readonly moduleService = inject(ModuleService);
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
   private readonly snackBar = inject(MatSnackBar);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroy$ = new Subject<void>();
+  private get moduleId(): number { return this.moduleService.getActiveModuleId() || 1; }
 
   private readonly drillApiUrl = `${environment.apiBaseUrl}/drill`;
 
@@ -308,7 +311,7 @@ export class DrillModeComponent implements OnInit, OnDestroy {
 
     // Fetch analytics profile to get weak areas with proficiency data
     this.analyticsService
-      .getPerformanceProfile()
+      .getPerformanceProfile(this.moduleId)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {

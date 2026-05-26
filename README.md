@@ -1,6 +1,6 @@
-# AWS Cloud Practitioner Exam Practice Application
+# AWS Certification Practice Platform
 
-A full-stack web application for preparing for the AWS Cloud Practitioner certification exam. Features an adaptive question system that adjusts difficulty based on performance, immediate feedback with memory techniques and IT-context mappings, progress tracking, drill mode for weak areas, and study materials — all served from a single port with no external dependencies.
+A modular, full-stack learning management system for preparing for AWS certification exams. Each certification is a self-contained module with its own question bank, exam format, study materials, and progress tracking — all served from a single port with no external dependencies.
 
 ---
 
@@ -8,44 +8,29 @@ A full-stack web application for preparing for the AWS Cloud Practitioner certif
 
 **This application is not affiliated with, endorsed by, or verified by Amazon Web Services (AWS).** It is an independent, personal study tool built for self-directed exam preparation.
 
-The question content is aggregated from publicly available AWS documentation, whitepapers, FAQs, and the official exam guide, then compiled into a structured format for adaptive practice. While every effort has been made to ensure accuracy, this tool **should not be considered a replacement for official AWS training, courses, or practice exams.**
-
-Use this application as a supplement to — not a substitute for — official preparation resources.
+The question content is aggregated from publicly available AWS documentation, whitepapers, FAQs, and official exam guides, then compiled into a structured format for adaptive practice. While every effort has been made to ensure accuracy, this tool **should not be considered a replacement for official AWS training, courses, or practice exams.**
 
 ### Official AWS Resources
 
 | Resource | Link |
 |---|---|
 | AWS Cloud Practitioner Exam Guide | https://aws.amazon.com/certification/certified-cloud-practitioner/ |
+| AWS ML Specialty Exam Guide | https://aws.amazon.com/certification/certified-machine-learning-specialty/ |
 | AWS Skill Builder (free courses) | https://skillbuilder.aws/ |
 | AWS Documentation | https://docs.aws.amazon.com/ |
 | AWS Whitepapers & Guides | https://aws.amazon.com/whitepapers/ |
 | AWS Official Practice Exams | https://aws.amazon.com/certification/certification-prep/ |
-| AWS Well-Architected Framework | https://aws.amazon.com/architecture/well-architected/ |
-| AWS FAQs (by service) | https://aws.amazon.com/faqs/ |
-
-### Keeping Content Current
-
-AWS services and exam content evolve over time. If you encounter outdated material or want to add questions reflecting new services or exam updates, you can import fresh questions via the API:
-
-```bash
-curl -X POST http://localhost:4201/api/questions/import \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{ "questions": [ { ... } ] }'
-```
-
-See the [Adding Questions](#adding-questions) section for the full schema.
 
 ### Future Vision
 
-This application is architected as a general-purpose adaptive learning system. The AWS Cloud Practitioner content is one course within what could become a broader **Learning Management System (LMS)**. The question engine, adaptive difficulty, session management, analytics, and drill mode are all content-agnostic — they work with any subject matter that can be expressed as multiple-choice questions with explanations. Future iterations may expand this into a multi-course LMS platform.
+This application is architected as a general-purpose adaptive learning system. The question engine, adaptive difficulty, session management, analytics, and drill mode are all content-agnostic — they work with any subject matter that can be expressed as multiple-choice questions. Adding a new certification module requires only creating questions and a module configuration — no code changes.
 
 ---
 
 ## Table of Contents
 
 - [Features](#features)
+- [Modules](#modules)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
@@ -54,8 +39,8 @@ This application is architected as a general-purpose adaptive learning system. T
 - [External Access](#external-access)
 - [Environment Variables](#environment-variables)
 - [API Reference](#api-reference)
-- [Question Bank](#question-bank)
-- [Adding Questions](#adding-questions)
+- [Adding a New Module](#adding-a-new-module)
+- [Question Schema](#question-schema)
 - [Production Notes](#production-notes)
 - [Screenshots](#screenshots)
 
@@ -63,22 +48,42 @@ This application is architected as a general-purpose adaptive learning system. T
 
 ## Features
 
-- **472 curated questions** — covering all four exam domains with balanced answer options (no length-based guessing)
-- **Exam mode** — timed 65-question practice exam simulating the real AWS Cloud Practitioner exam (90 minutes, 70% to pass)
+- **Modular architecture** — each certification is an independent module with its own questions, exam format, study materials, and progress tracking
+- **892 total questions across 3 modules** — balanced answer options, shuffled positions
+- **Timed exam mode** — simulates the real exam (question count, time limit, and passing score configured per module)
 - **Adaptive difficulty** — starts at level 2, adjusts ±1 per answer (range 1–5)
-- **Randomised options** — answer positions are shuffled on every question serve
-- **Immediate feedback** — correct answer, explanation, memory technique, and IT-to-AWS context mapping
+- **Randomised options** — answer positions shuffled on every serve; distractors balanced in length
+- **Immediate feedback** — correct answer, explanation, memory technique, and IT-context mapping
+- **Performance dashboard** — per-module scores, topic breakdown, weak areas, unified session/exam history
+- **Drill mode** — per-module focused practice on topics below 70% (requires ≥5 attempts)
+- **Study materials** — per-module study guides and cheatsheets stored in the database (not hardcoded)
+- **Module selection** — after login, choose which certification to practice; switch anytime via profile menu
+- **Self-service module creation** — create custom modules via API or standalone preparation tool
+- **Module import/export** — export modules as JSON, import into other instances
+- **Reset progress** — clear all history per-user from Settings (profile menu)
 - **Session persistence** — progress saves automatically; resume where you left off
-- **Performance dashboard** — overall score, per-topic breakdown, weak area identification, unified session/exam history
-- **Drill mode** — focused practice on topics where your score is below 70% (requires ≥5 attempts in a topic)
-- **Study materials** — on-demand study guides and pre-generated cheatsheets for all exam domains
-- **Reset progress** — clear all history and start fresh from the Settings menu (per-user, profile icon → Settings)
-- **Single-port deployment** — Flask serves both the API and the Angular production build on one port (4201)
-- **Turso database support** — optional remote libSQL database for cloud deployments (falls back to local SQLite)
-- **LAN/external access** — auto-detects your network IP; works through DDNS with port forwarding
-- **Render.com ready** — includes `build.sh` and `render.yaml` for one-click cloud deployment
-- **Responsive UI** — works on desktop, tablet, and mobile (375px and up)
+- **Single-port deployment** — Flask serves both the API and Angular production build on port 4201
+- **Turso database support** — optional remote libSQL for cloud deployments (falls back to local SQLite)
+- **LAN/external access** — auto-detects network IP; works through DDNS with port forwarding
+- **Render.com ready** — includes `build.sh` for one-click cloud deployment
+- **Responsive UI** — works on desktop, tablet, and mobile (375px+)
 - **Auth** — registration, login with rate limiting (5 attempts / 15 min), 24-hour session tokens
+
+---
+
+## Modules
+
+| Module | Questions | Exam Format | Pass Score | Study Guides |
+|---|---|---|---|---|
+| AWS Cloud Practitioner | 472 | 65 questions / 90 min | 70% | 4 guides, 6 cheatsheets |
+| AWS Machine Learning Specialty | 285 | 85 questions / 170 min | 75% | 4 guides, 5 cheatsheets |
+| AWS Developer Associate | 135 | 65 questions / 130 min | 72% | 4 guides, 6 cheatsheets |
+
+Each module has:
+- Independent question pool across all difficulty levels (1–5)
+- Module-specific topic areas and study guides
+- Separate session history, analytics, and drill mode
+- Configurable exam parameters (question count, time limit, passing score)
 
 ---
 
@@ -99,102 +104,97 @@ This application is architected as a general-purpose adaptive learning system. T
 ```
 APQ/
 ├── start.ps1                   # One-command launcher (Windows PowerShell)
+├── build.sh                    # Render.com build script
+├── render.yaml                 # Render deployment config
 ├── LICENSE                     # MIT License
 ├── README.md
 │
 ├── backend/
 │   ├── app.py                  # Flask app factory (serves API + Angular static files)
-│   ├── config.py               # Dev / test / prod configuration
+│   ├── config.py               # Configuration with Turso/SQLite/PostgreSQL support
 │   ├── extensions.py           # SQLAlchemy + Flask-Login instances
 │   ├── requirements.txt
 │   ├── .env.example
 │   │
-│   ├── models/                 # SQLAlchemy ORM models
+│   ├── models/
+│   │   ├── module.py           # Module definition (name, exam config, topics)
 │   │   ├── user.py
-│   │   ├── question.py         # Includes option shuffling on serve
-│   │   ├── session.py
+│   │   ├── question.py         # Module-scoped, option shuffling on serve
+│   │   ├── session.py          # Module-scoped practice sessions
 │   │   ├── question_attempt.py
-│   │   ├── user_profile.py
-│   │   └── exam_attempt.py     # Timed exam attempts (65 questions, 90 min)
+│   │   ├── user_profile.py     # Per-user per-module analytics
+│   │   └── exam_attempt.py     # Module-scoped timed exams
 │   │
-│   ├── routes/                 # Flask blueprints (API endpoints)
+│   ├── routes/
+│   │   ├── modules.py          # GET /api/modules/ — list/get modules
 │   │   ├── auth.py             # /api/register, /api/login, /api/logout
-│   │   ├── session.py          # /api/session/* (includes /reset)
-│   │   ├── question.py         # /api/question/*
-│   │   ├── analytics.py        # /api/analytics/*
-│   │   ├── drill.py            # /api/drill/*
-│   │   ├── study.py            # /api/study/*
-│   │   ├── admin.py            # /api/questions/*
-│   │   └── exam.py             # /api/exam/* (timed practice exams)
+│   │   ├── session.py          # /api/session/* (new, restore, save, reset)
+│   │   ├── question.py         # /api/question/* (next, answer, import, filter)
+│   │   ├── analytics.py        # /api/analytics/* (profile, history)
+│   │   ├── drill.py            # /api/drill/* (activate, deactivate)
+│   │   ├── exam.py             # /api/exam/* (start, answer, submit, history, result)
+│   │   ├── study.py            # /api/study/* (guide, cheatsheets)
+│   │   └── admin.py            # /api/questions/* (import, filter, reseed)
 │   │
-│   ├── services/               # Business logic
-│   │   ├── auth_service.py
-│   │   ├── question_engine.py
-│   │   ├── adaptive_system.py
-│   │   ├── feedback_service.py
-│   │   ├── session_manager.py
-│   │   ├── analytics_engine.py
-│   │   ├── study_guide_generator.py
-│   │   └── question_parser.py
+│   ├── services/
+│   │   ├── question_engine.py      # Module-scoped question selection
+│   │   ├── adaptive_system.py      # Difficulty adjustment logic
+│   │   ├── feedback_service.py     # Explanation + memory technique generation
+│   │   ├── session_manager.py      # Module-aware session lifecycle
+│   │   ├── analytics_engine.py     # Module-scoped analytics + history
+│   │   ├── auth_service.py         # Registration, login, token management
+│   │   ├── study_guide_generator.py # Per-module study content (CP + ML)
+│   │   └── question_parser.py      # JSON import/validation
 │   │
 │   ├── middleware/
 │   │   └── auth.py
 │   │
-│   ├── seed_data/
-│   │   ├── questions.json      # 472 balanced questions
-│   │   ├── gen.py              # Question generator script
-│   │   └── balance_options.py  # Option length balancing utility
-│   │
-│   └── instance/
-│       └── aws_exam_practice.db
+│   └── seed_data/
+│       ├── questions.json          # 472 Cloud Practitioner questions
+│       ├── ml_questions.json       # 285 ML Specialty questions
+│       ├── gen.py                  # CP question generator
+│       ├── ml_questions_gen.py     # ML question generator
+│       └── balance_options.py      # Option length balancing utility
 │
 └── frontend/
     ├── angular.json
     ├── package.json
-    ├── vite.config.js          # Allows external hostname access
-    └── src/
-        ├── index.html
-        ├── main.ts
-        ├── styles.scss
-        ├── environments/
-        │   ├── environment.ts
-        │   └── environment.prod.ts   # Uses relative /api path
-        └── app/
-            ├── app.config.ts
-            ├── app.routes.ts
-            ├── guards/
-            │   └── auth.guard.ts
-            ├── services/
-            │   ├── auth.service.ts
-            │   ├── auth.interceptor.ts
-            │   ├── question.service.ts
-            │   ├── session.service.ts
-            │   ├── analytics.service.ts
-            │   └── study.service.ts
-            └── components/
-                ├── login/
-                ├── register/
-                ├── nav-shell/              # Top nav bar + router outlet
-                ├── practice-session/       # Question → feedback loop
-                ├── question/
-                ├── feedback/
-                ├── analytics-dashboard/    # Unified history (practice + drill + exam)
-                ├── drill-mode/
-                ├── exam-mode/              # Timed 65-question practice exam
-                ├── study-materials/
-                └── admin-panel/            # Settings (reset progress)
+    ├── vite.config.js
+    └── src/app/
+        ├── app.routes.ts           # Module selection + protected routes
+        ├── guards/auth.guard.ts
+        ├── services/
+        │   ├── module.service.ts       # Active module state (localStorage)
+        │   ├── auth.service.ts
+        │   ├── auth.interceptor.ts
+        │   ├── question.service.ts
+        │   ├── session.service.ts      # Module-aware create/restore
+        │   ├── analytics.service.ts    # Module-aware profile/history
+        │   └── study.service.ts        # Module-aware cheatsheets
+        └── components/
+            ├── module-select/          # Module picker (after login)
+            ├── nav-shell/              # Dynamic title showing active module
+            ├── practice-session/       # Module-scoped question loop
+            ├── question/
+            ├── feedback/
+            ├── analytics-dashboard/    # Module-scoped history + metrics
+            ├── drill-mode/             # Module-scoped weak area drilling
+            ├── exam-mode/              # Dynamic exam config from module
+            ├── study-materials/        # Dynamic topics from module
+            ├── login/
+            ├── register/
+            └── admin-panel/            # Settings (reset progress)
 ```
 
 ---
 
 ## Prerequisites
 
-| Tool | Minimum version | Check |
-|---|---|---|
-| Python | 3.10 | `python --version` |
-| pip | 23+ | `pip --version` |
-| Node.js | 18 | `node --version` |
-| npm | 9 | `npm --version` |
+| Tool | Minimum version |
+|---|---|
+| Python | 3.10 |
+| Node.js | 18 |
+| npm | 9 |
 
 ---
 
@@ -206,217 +206,203 @@ cd e:\DevEnv\APQ
 ```
 
 The script will:
-1. Install Python dependencies
-2. Install Node dependencies (first run only)
-3. Build the Angular frontend for production
-4. Create database tables and seed 472 questions
-5. Launch Flask in a new terminal window (serves everything on port 4201)
+1. Install Python and Node dependencies
+2. Build the Angular frontend for production
+3. Create database tables and seed both modules (Cloud Practitioner + ML Specialty)
+4. Launch Flask on port 4201
 
-Open your browser to the URL shown in the terminal (typically `http://localhost:4201` or your LAN IP).
-
-Register a new account and start practising.
+Open `http://localhost:4201`, register, and select a module.
 
 ---
 
 ## Manual Setup
 
-For macOS/Linux or if you prefer running each step yourself:
-
-### Backend
-
 ```bash
+# Backend
 cd backend
-python -m venv venv
-source venv/bin/activate        # macOS/Linux
-# venv\Scripts\activate         # Windows
-
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
-# Initialise database + seed questions
+# Init DB + seed (creates both modules)
 python -c "
-import json
 from app import create_app
 from extensions import db
+from models.module import Module
 from models.question import Question
+import json
 
 app = create_app()
 with app.app_context():
     db.create_all()
-    with open('seed_data/questions.json', encoding='utf-8') as f:
-        questions = json.load(f)
-    count = 0
-    for q in questions:
-        if not Question.query.filter_by(question_text=q['question_text']).first():
-            db.session.add(Question(
-                question_text=q['question_text'], options=q['options'],
-                correct_answer=q['correct_answer'], explanation=q['explanation'],
-                memory_technique=q['memory_technique'], topic_area=q['topic_area'],
-                difficulty_level=q['difficulty_level'],
-                it_context_mapping=q.get('it_context_mapping'), is_active=True
-            ))
-            count += 1
-    db.session.commit()
-    print(f'Seeded {count} questions. Total: {Question.query.count()}')
+    # Cloud Practitioner module
+    if not Module.query.filter_by(slug='cloud-practitioner').first():
+        m = Module(slug='cloud-practitioner', name='AWS Cloud Practitioner', icon='cloud',
+            exam_question_count=65, exam_time_limit_seconds=5400, exam_passing_score=70.0,
+            topic_areas=['Cloud Concepts','Security and Compliance','Technology','Billing and Pricing'])
+        db.session.add(m); db.session.commit()
+        with open('seed_data/questions.json') as f:
+            for q in json.load(f):
+                if not Question.query.filter_by(question_text=q['question_text']).first():
+                    db.session.add(Question(module_id=m.module_id, **q, is_active=True))
+        db.session.commit()
+    # ML Specialty module
+    if not Module.query.filter_by(slug='ml-specialty').first():
+        m = Module(slug='ml-specialty', name='AWS Machine Learning Specialty', icon='psychology',
+            exam_question_count=85, exam_time_limit_seconds=10200, exam_passing_score=75.0,
+            topic_areas=['Data Engineering','Exploratory Data Analysis','Modeling','ML Implementation and Operations'])
+        db.session.add(m); db.session.commit()
+        with open('seed_data/ml_questions.json') as f:
+            for q in json.load(f):
+                if not Question.query.filter_by(question_text=q['question_text']).first():
+                    db.session.add(Question(module_id=m.module_id, **q, is_active=True))
+        db.session.commit()
+    print('Done')
 "
-```
 
-### Frontend (build only — Flask serves the output)
-
-```bash
-cd frontend
+# Frontend
+cd ../frontend
 npm install
 npx ng build --configuration production
-```
 
-### Run
-
-```bash
-cd backend
+# Run
+cd ../backend
 python app.py
-# Serves everything on http://localhost:4201
+# → http://localhost:4201
 ```
 
 ---
 
 ## External Access
 
-The app runs on a single port (4201). To access from other devices:
-
-1. **LAN access** — `start.ps1` auto-detects your LAN IP and configures CORS. Other devices on your network can access `http://<your-ip>:4201`.
-
-2. **Internet access via DDNS** — forward port 4201 in your router to your machine's LAN IP. The `vite.config.js` allows any hostname, and Flask's CORS is configured by `start.ps1`.
-
-3. **Override the bind IP** — `.\start.ps1 -BindIP 0.0.0.0` to listen on all interfaces.
+Single port (4201). For LAN/internet access:
+- `start.ps1` auto-detects LAN IP and configures CORS
+- `vite.config.js` allows any hostname
+- Forward port 4201 in your router for DDNS access
 
 ---
 
 ## Environment Variables
 
-Copy `backend/.env.example` to `backend/.env` and adjust as needed.
-
 | Variable | Default | Description |
 |---|---|---|
-| `SECRET_KEY` | `dev-secret-key-change-in-production` | Flask secret key — **change in production** |
-| `DATABASE_URI` | `sqlite:///aws_exam_practice.db` | SQLAlchemy connection string (local fallback) |
-| `TURSO_DATABASE_URL` | *(empty)* | Turso libSQL URL (e.g. `libsql://your-db.turso.io`) |
-| `TURSO_AUTH_TOKEN` | *(empty)* | Turso authentication token |
-| `CORS_ORIGINS` | `http://localhost:4200` | Comma-separated allowed origins (overridden by `start.ps1`) |
-| `SESSION_COOKIE_SECURE` | `False` | Set to `True` in production (requires HTTPS) |
-
-**Database options (choose one):**
-
-```bash
-# Option 1: Local SQLite (default — no config needed)
-
-# Option 2: Turso (remote libSQL — requires sqlalchemy-libsql on Linux)
-TURSO_DATABASE_URL=libsql://your-database.turso.io
-TURSO_AUTH_TOKEN=your-auth-token
-
-# Option 3: PostgreSQL
-DATABASE_URI=postgresql://user:password@localhost:5432/aws_exam_practice
-```
+| `SECRET_KEY` | dev key | Flask secret — **change in production** |
+| `DATABASE_URI` | `sqlite:///aws_exam_practice.db` | Local SQLite fallback |
+| `TURSO_DATABASE_URL` | *(empty)* | Turso libSQL URL for cloud DB |
+| `TURSO_AUTH_TOKEN` | *(empty)* | Turso auth token |
+| `CORS_ORIGINS` | `http://localhost:4201` | Allowed origins |
+| `PORT` | `4201` | Server port (Render sets this) |
 
 ---
 
 ## API Reference
 
-All endpoints except `POST /api/register`, `POST /api/login`, and `GET /api/health` require:
-```
-Authorization: Bearer <session_token>
-```
+All endpoints except `/api/register`, `/api/login`, `/api/health` require `Authorization: Bearer <token>`.
 
-### Authentication
-
+### Modules
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/api/register` | Create account `{ username, email, password }` |
-| `POST` | `/api/login` | Authenticate `{ username, password }` → `session_token` |
-| `POST` | `/api/logout` | Invalidate session token |
-| `GET` | `/api/health` | Health check |
+| `GET` | `/api/modules/` | List all active modules |
+| `GET` | `/api/modules/<slug>` | Get module details |
+| `POST` | `/api/modules/create` | Create a new module `{ name, topic_areas, exam_question_count, ... }` |
+| `POST` | `/api/modules/<slug>/import` | Import questions into a module `{ questions: [...] }` |
+| `GET` | `/api/modules/<slug>/export` | Export all questions from a module as JSON |
+
+### Auth
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/register` | Create account |
+| `POST` | `/api/login` | Authenticate → session_token |
+| `POST` | `/api/logout` | Invalidate token |
 
 ### Session
-
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/api/session/new` | Start a new practice session |
-| `GET` | `/api/session/restore` | Restore most recent active session |
+| `POST` | `/api/session/new` | New session `{ module_id }` |
+| `GET` | `/api/session/restore?module_id=` | Restore active session |
 | `POST` | `/api/session/save` | Save session state |
-| `POST` | `/api/session/reset` | Delete all progress for the current user |
+| `POST` | `/api/session/reset` | Delete all user progress |
 
 ### Questions
-
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/question/next` | Next question `?session_id=&difficulty=` |
-| `POST` | `/api/question/answer` | Submit answer → feedback + next question |
-| `POST` | `/api/question/import` | Batch import questions |
-| `GET` | `/api/question/filter` | Filter by topic/difficulty |
+| `GET` | `/api/question/next?session_id=` | Next question (module-scoped) |
+| `POST` | `/api/question/answer` | Submit answer → feedback |
 
 ### Analytics
-
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/analytics/profile` | Performance profile (scores, weak areas, history) |
-| `GET` | `/api/analytics/history` | Session history `?limit=20` |
+| `GET` | `/api/analytics/profile?module_id=` | Module-scoped performance |
+| `GET` | `/api/analytics/history?module_id=` | Module-scoped session history |
 
 ### Drill Mode
-
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/api/drill/activate` | Enter drill mode (weak area topics) |
+| `POST` | `/api/drill/activate` | Enter drill mode (module-scoped) |
 | `POST` | `/api/drill/deactivate` | Exit drill mode |
 
-### Study Materials
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/study/guide/<topic>` | Generate study guide (up to 30s) |
-| `GET` | `/api/study/cheatsheets` | List pre-generated cheatsheets |
-
 ### Exam Mode
-
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/api/exam/start` | Start a timed 65-question exam (or resume in-progress) |
-| `POST` | `/api/exam/answer` | Save an answer `{ exam_id, question_id, answer }` |
-| `POST` | `/api/exam/submit` | Submit exam for grading |
-| `GET` | `/api/exam/history` | List all completed exam attempts |
-| `GET` | `/api/exam/result/<id>` | Detailed results with correct answers for review |
+| `POST` | `/api/exam/start` | Start exam `{ module_id }` |
+| `POST` | `/api/exam/answer` | Save answer |
+| `POST` | `/api/exam/submit` | Submit for grading |
+| `GET` | `/api/exam/history` | Completed exams |
+| `GET` | `/api/exam/result/<id>` | Detailed results |
 
----
-
-## Question Bank
-
-**472 curated questions** across all four AWS Cloud Practitioner exam domains:
-
-| Topic | Count |
-|---|---|
-| Technology | 157 |
-| Billing and Pricing | 104 |
-| Security and Compliance | 103 |
-| Cloud Concepts | 108 |
-| **Total** | **472** |
-
-Difficulty distribution:
-
-| Level | Count | Description |
+### Study Materials
+| Method | Endpoint | Description |
 |---|---|---|
-| 1 | 60 | Foundational definitions |
-| 2 | 108 | Core service knowledge |
-| 3 | 113 | Applied concepts and comparisons |
-| 4 | 115 | Architecture decisions and trade-offs |
-| 5 | 76 | Advanced multi-service scenarios |
-
-### Anti-pattern protections
-
-- **Option shuffling** — answer positions are randomised on every serve
-- **Balanced option lengths** — distractors are similar in length to the correct answer (correct answer is longest only ~10% of the time, matching natural distribution)
+| `GET` | `/api/study/guide/<topic>` | Generate study guide |
+| `GET` | `/api/study/cheatsheets?module_id=` | Module-scoped cheatsheets |
 
 ---
 
-## Adding Questions
+## Adding a New Module
 
-Questions follow this schema:
+### Via API (recommended)
+
+1. Create the module:
+```bash
+POST /api/modules/create
+{
+    "name": "AWS Solutions Architect Associate",
+    "slug": "solutions-architect",
+    "icon": "architecture",
+    "exam_question_count": 65,
+    "exam_time_limit_seconds": 7800,
+    "exam_passing_score": 72.0,
+    "topic_areas": ["Design Resilient Architectures", "Design High-Performing Architectures", "Design Secure Architectures", "Design Cost-Optimized Architectures"]
+}
+```
+
+2. Import questions:
+```bash
+POST /api/modules/solutions-architect/import
+{ "questions": [ { ... }, { ... } ] }
+```
+
+3. Export for backup:
+```bash
+GET /api/modules/solutions-architect/export
+```
+
+### Via Standalone Tool
+
+1. Create a JSON file following `tools/module_template.json`
+2. Run the preparation tool:
+```bash
+python tools/prepare_module.py my_module.json -o my_module_ready.json
+```
+3. The tool validates questions, balances option lengths, and outputs a ready-to-import file
+4. Import via the API endpoints above
+
+### Study Content
+
+Study guides and cheatsheets are stored in the module's `study_content` database field. They can be included when creating a module or added later. No code changes needed — the frontend dynamically loads content from the active module.
+
+---
+
+## Question Schema
 
 ```json
 {
@@ -425,41 +411,82 @@ Questions follow this schema:
   "correct_answer": "must match one option exactly",
   "explanation": "string (min 50 chars)",
   "memory_technique": "mnemonic or memory aid",
-  "topic_area": "Cloud Concepts | Security and Compliance | Technology | Billing and Pricing",
+  "topic_area": "must match one of the module's topic_areas",
   "difficulty_level": 1-5,
   "it_context_mapping": "traditional IT equivalent (optional)"
 }
 ```
 
-**Tip:** Keep all four options similar in length and detail. Run `python seed_data/balance_options.py` after adding questions to automatically balance any length discrepancies.
-
-To import via API:
-```bash
-curl -X POST http://localhost:4201/api/questions/import \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{ "questions": [ { ... } ] }'
-```
+**Tips:**
+- Keep all four options similar in length and detail
+- Run `python seed_data/balance_options.py` to auto-balance length discrepancies
+- Options are shuffled on every serve — position doesn't matter
 
 ---
 
 ## Production Notes
 
-1. **Secret key** — set a strong random `SECRET_KEY`; never use the default
-2. **Database** — switch to Turso (set `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`) or PostgreSQL via `DATABASE_URI`
-3. **HTTPS** — set `SESSION_COOKIE_SECURE=True` and serve behind a reverse proxy
-4. **WSGI server** — replace `python app.py` with Gunicorn:
-   ```bash
-   gunicorn -w 4 -b 0.0.0.0:$PORT "app:create_app()"
-   ```
-5. **Port** — the app uses `PORT` env var (Render sets this automatically) or defaults to 4201
-6. **Render.com deployment** — the repo includes `build.sh` and `render.yaml`. Set Build Command to `chmod +x build.sh && ./build.sh` and Start Command to `cd backend && gunicorn "app:create_app()" --bind 0.0.0.0:$PORT`
+1. **Secret key** — set a strong random `SECRET_KEY`
+2. **Database** — use Turso (`TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`) or PostgreSQL (`DATABASE_URI`)
+3. **HTTPS** — set `SESSION_COOKIE_SECURE=True` behind a reverse proxy
+4. **WSGI** — `gunicorn -w 4 -b 0.0.0.0:$PORT "app:create_app()"`
+5. **Render.com** — Build: `chmod +x build.sh && ./build.sh` / Start: `cd backend && gunicorn "app:create_app()" --bind 0.0.0.0:$PORT`
+
+---
+
+## Changelog
+
+### v2.0 — Modular Architecture (Current Branch)
+
+**New Features:**
+- **Module system** — complete refactor from single-cert to multi-module architecture
+- **AWS Developer Associate module** — 135 questions, 4 study guides, 6 cheatsheets, 65q/130min/72% exam
+- **AWS Machine Learning Specialty module** — 285 questions, 4 study guides, 5 cheatsheets, 85q/170min/75% exam
+- **Module creation API** — `POST /api/modules/create` for creating custom modules without code changes
+- **Module import/export API** — `POST /api/modules/<slug>/import` and `GET /api/modules/<slug>/export`
+- **Standalone preparation tool** — `tools/prepare_module.py` validates, balances, and packages question sets
+- **Module template** — `tools/module_template.json` shows the expected format for custom modules
+- **Database-stored study content** — study guides and cheatsheets stored per-module in DB (not hardcoded)
+- **Dynamic exam intro** — exam page shows module-specific question count, time limit, and pass score
+- **Dynamic study topics** — study guide buttons reflect the active module's topic areas
+- **Module selection page** — shown after login, users pick which cert to practice
+
+**Architecture Changes:**
+- Added `Module` model with exam config, topic areas, and study content
+- Added `module_id` FK to Question, Session, ExamAttempt, and UserProfile models
+- All routes accept `module_id` parameter for scoping
+- QuestionEngine, AnalyticsEngine, SessionManager all module-aware
+- Frontend services pass active module ID to all API calls
+- Module state persisted in localStorage (survives refresh)
+- UserProfile is now per-user-per-module (independent progress per cert)
+
+**Files Added:**
+- `backend/models/module.py` — Module model
+- `backend/routes/modules.py` — Module CRUD + import/export API
+- `backend/seed_data/dva_questions_gen.py` — DVA question generator
+- `backend/seed_data/dva_questions.json` — 135 DVA questions
+- `frontend/src/app/services/module.service.ts` — Active module state management
+- `frontend/src/app/components/module-select/` — Module picker component
+- `tools/prepare_module.py` — Standalone question preparation tool
+- `tools/module_template.json` — Template for custom modules
+
+### v1.0 — Single Module (Master Branch)
+
+- AWS Cloud Practitioner module with 472 questions
+- Adaptive difficulty, drill mode, exam mode, study materials
+- Single-port Flask deployment serving Angular production build
+- Turso database support for cloud deployments
+- LAN/external access with auto-detected IP
+- Reset progress, session persistence, responsive UI
 
 ---
 
 ## Screenshots
 
 <img width="757" height="573" alt="image" src="https://github.com/user-attachments/assets/3d697589-479a-4603-9ecb-0b492179efc4" />
+<img width="1552" height="753" alt="{EFF91A31-5B92-42BF-90B9-A1F635ED34AD}" src="https://github.com/user-attachments/assets/1d349b8f-8a13-42d6-90e4-970db2579c8c" />
+<img width="290" height="369" alt="{7F1F6583-FB81-465E-AC17-328D317414E4}" src="https://github.com/user-attachments/assets/f5e00e53-a15f-4a6e-b3b6-c4da57678232" />
+
 <img width="1359" height="853" alt="{0967A806-69D4-4E89-A9DE-F2EFE1BB0135}" src="https://github.com/user-attachments/assets/20a86dc4-41f1-49a6-ba96-48d39d6c955c" />
 <img width="1360" height="848" alt="{6D643D9F-7661-45A2-83AE-9658090832F9}" src="https://github.com/user-attachments/assets/ad434fd1-697d-438a-9e3b-12cd2d63660f" />
 <img width="1363" height="850" alt="{DE632C62-7F7F-49A8-8880-9D85A7A25C51}" src="https://github.com/user-attachments/assets/a5b6e3a6-b729-44e3-8038-a7b4b3f7bcc7" />
@@ -467,5 +494,5 @@ curl -X POST http://localhost:4201/api/questions/import \
 <img width="1390" height="946" alt="{9B3F0FB9-B96B-457F-B4A3-A666E26959E1}" src="https://github.com/user-attachments/assets/5d27effa-4af9-47de-8bfc-c746f5f0245c" />
 <img width="1485" height="515" alt="{A3609826-0D9A-4616-AB51-904F7ED3430B}" src="https://github.com/user-attachments/assets/43dd8010-8a77-4581-9ffb-0ab63ab7a244" />
 <img width="1709" height="979" alt="{33332899-10EF-47FE-BA07-81AF1B50414C}" src="https://github.com/user-attachments/assets/16c06ed5-e282-477c-a68c-0723d7b6d698" />
-
+<img width="1865" height="1086" alt="{1509DE56-F5F5-4323-8050-138C5F02A338}" src="https://github.com/user-attachments/assets/85ab2964-230a-4790-9727-9260c70be080" />
 

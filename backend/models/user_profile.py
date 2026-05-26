@@ -23,15 +23,17 @@ class UserProfile(db.Model):
     __tablename__ = 'user_profiles'
     
     profile_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), unique=True, nullable=False, index=True)
-    weak_areas = db.Column(db.JSON, default=list, nullable=False)  # [{"topic": str, "score": float, "attempt_count": int}]
-    topic_scores = db.Column(db.JSON, default=dict, nullable=False)  # {"topic": {"correct": int, "total": int, "score": float}}
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False, index=True)
+    module_id = db.Column(db.Integer, db.ForeignKey('modules.module_id'), nullable=False, index=True)
+    weak_areas = db.Column(db.JSON, default=list, nullable=False)
+    topic_scores = db.Column(db.JSON, default=dict, nullable=False)
     total_questions_answered = db.Column(db.Integer, default=0, nullable=False)
     overall_performance_score = db.Column(db.Float, default=0.0, nullable=False)
     last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
-    # Constraints
+    # One profile per user per module
     __table_args__ = (
+        db.UniqueConstraint('user_id', 'module_id', name='uq_user_module_profile'),
         db.CheckConstraint('total_questions_answered >= 0', name='check_total_questions_positive'),
         db.CheckConstraint('overall_performance_score >= 0.0 AND overall_performance_score <= 100.0', name='check_overall_score_range'),
     )

@@ -109,9 +109,10 @@ def restore_session():
     try:
         # Get user ID from authenticated request
         user_id = request.user_id
+        module_id = request.args.get('module_id', 1, type=int)
         
         # Restore session using SessionManager
-        session = SessionManager.restore_session(user_id)
+        session = SessionManager.restore_session(user_id, module_id=module_id)
         
         if not session:
             return jsonify({
@@ -193,9 +194,11 @@ def new_session():
     try:
         # Get user ID from authenticated request
         user_id = request.user_id
+        data = request.get_json(silent=True) or {}
+        module_id = data.get('module_id', 1)
         
         # Create new session using SessionManager
-        session = SessionManager.create_session(user_id)
+        session = SessionManager.create_session(user_id, module_id=module_id)
         
         if not session:
             return jsonify({

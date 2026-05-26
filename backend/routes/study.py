@@ -117,7 +117,18 @@ def get_study_guide(topic):
         }
     """
     try:
-        # Initialize generator
+        # Check if a module_id is provided and has study_content for this topic
+        module_id = request.args.get('module_id', type=int)
+        if module_id:
+            from models.module import Module as ModuleModel
+            module = ModuleModel.query.get(module_id)
+            if module and module.study_content and topic in module.study_content:
+                # Return module-specific study content
+                return jsonify({
+                    'study_guide': module.study_content[topic]
+                }), 200
+
+        # Fall back to hardcoded generator
         generator = StudyGuideGenerator()
         
         # Generate study guide (30-second timeout enforced by service)
@@ -161,42 +172,32 @@ def get_study_guide(topic):
 def get_cheatsheets():
     """
     List available pre-generated cheatsheets.
-    
-    Headers:
-        Authorization: Bearer <session_token>
-    
-    Response:
-        200: {
-            "cheatsheets": [
-                {
-                    "id": string,
-                    "title": string,
-                    "topic_area": string,
-                    "description": string
-                }
-            ]
-        }
-        401: {
-            "error": {
-                "code": "UNAUTHORIZED" | "INVALID_TOKEN_FORMAT" | "SESSION_EXPIRED",
-                "message": string
-            }
-        }
-        500: {
-            "error": {
-                "code": "INTERNAL_ERROR",
-                "message": string
-            }
-        }
+    Uses module's study_content if available, falls back to hardcoded list.
     """
     try:
-        # Initialize generator
-        generator = StudyGuideGenerator()
+        module_id = request.args.get('module_id', type=int)
         
-        # Get pre-generated cheatsheets
+        # Check module's study_content for cheatsheets first
+        if module_id:
+            from models.module import Module
+            module = Module.query.get(module_id)
+            if module and module.study_content and '_cheatsheets' in module.study_content:
+                return jsonify({
+                    'cheatsheets': module.study_content['_cheatsheets']
+                }), 200
+
+        # Fall back to hardcoded generator
+        generator = StudyGuideGenerator()
         cheatsheets = generator.get_pregenerated_cheatsheets()
         
-        # Convert to dict format
+        # Filter by module's topic areas if module_id provided
+        if module_id:
+            from models.module import Module
+            module = Module.query.get(module_id)
+            if module and module.topic_areas:
+                topic_set = set(module.topic_areas)
+                cheatsheets = [cs for cs in cheatsheets if cs.topic_area in topic_set]
+        
         cheatsheets_data = [
             {
                 'id': cs.id,

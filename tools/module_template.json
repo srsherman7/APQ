@@ -1,0 +1,34 @@
+{
+  "module": {
+    "name": "Your Module Name",
+    "slug": "your-module-slug",
+    "description": "A brief description of what this module covers",
+    "icon": "school",
+    "exam_question_count": 65,
+    "exam_time_limit_seconds": 5400,
+    "exam_passing_score": 70.0,
+    "topic_areas": [
+      "Topic Area 1",
+      "Topic Area 2",
+      "Topic Area 3",
+      "Topic Area 4"
+    ]
+  },
+  "questions": [
+    {
+      "question_text": "What is the purpose of example question one?",
+      "options": [
+        "First option with reasonable detail and length",
+        "Second option with similar detail and length",
+        "Third option with comparable detail and length",
+        "Fourth option with equivalent detail and length"
+      ],
+      "correct_answer": "Second option with similar detail and length",
+      "explanation": "This explanation describes why the correct answer is correct. It should be at least 50 characters long and provide educational value to the learner.",
+      "memory_technique": "A mnemonic or memory aid to help remember this concept.",
+      "topic_area": "Topic Area 1",
+      "difficulty_level": 2,
+      "it_context_mapping": "Optional: how this maps to traditional IT concepts"
+    }
+  ]
+}

@@ -114,9 +114,14 @@ def activate_drill_mode():
         # Get user ID from authenticated request
         user_id = request.user_id
         
-        # Use AnalyticsEngine to identify weak areas
+        # Use AnalyticsEngine to identify weak areas (module-scoped via active session)
         analytics = AnalyticsEngine()
-        weak_areas = analytics.identify_weak_areas(user_id)
+        
+        # Get active session to determine module
+        session = Session.query.filter_by(user_id=user_id, is_active=True).first()
+        module_id = session.module_id if session else 1
+        
+        weak_areas = analytics.identify_weak_areas(user_id, module_id=module_id)
         
         # Check if user has any weak areas
         if not weak_areas:

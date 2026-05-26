@@ -126,15 +126,16 @@ export class AnalyticsService {
    *
    * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.9, 5.10
    */
-  getPerformanceProfile(): Observable<PerformanceProfile> {
-    const cacheKey = 'profile';
+  getPerformanceProfile(moduleId?: number): Observable<PerformanceProfile> {
+    const cacheKey = `profile:${moduleId || 'all'}`;
     const cached = this.getFromCache<PerformanceProfile>(cacheKey);
     if (cached !== null) {
       return of(cached);
     }
 
+    const params = moduleId ? `?module_id=${moduleId}` : '';
     return this.http
-      .get<PerformanceProfile>(`${this.apiUrl}/profile`)
+      .get<PerformanceProfile>(`${this.apiUrl}/profile${params}`)
       .pipe(
         timeout(REQUEST_TIMEOUT_MS),
         retry({
@@ -187,8 +188,8 @@ export class AnalyticsService {
    *
    * Requirements: 5.1, 5.4, 5.5, 5.6, 5.8, 5.9
    */
-  getAnalyticsChartData(): Observable<AnalyticsChartData> {
-    return this.getPerformanceProfile().pipe(
+  getAnalyticsChartData(moduleId?: number): Observable<AnalyticsChartData> {
+    return this.getPerformanceProfile(moduleId).pipe(
       map(profile => this.transformToChartData(profile)),
       catchError(err => this.handleError(err))
     );

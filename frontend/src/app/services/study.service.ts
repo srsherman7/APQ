@@ -109,11 +109,12 @@ export class StudyService {
    *
    * @param topic  The exam topic area to generate a study guide for
    */
-  getStudyGuide(topic: string): Observable<StudyGuideResponse> {
+  getStudyGuide(topic: string, moduleId?: number): Observable<StudyGuideResponse> {
     const encodedTopic = encodeURIComponent(topic);
+    const params = moduleId ? `?module_id=${moduleId}` : '';
 
     return this.http
-      .get<StudyGuideResponse>(`${this.baseUrl}/study/guide/${encodedTopic}`)
+      .get<StudyGuideResponse>(`${this.baseUrl}/study/guide/${encodedTopic}${params}`)
       .pipe(
         timeout(this.STUDY_GUIDE_TIMEOUT_MS),
         retry({
@@ -133,9 +134,10 @@ export class StudyService {
    *
    * Requirements: 7.1, 7.6, 7.9, 9.7
    */
-  getCheatsheets(): Observable<CheatsheetsResponse> {
+  getCheatsheets(moduleId?: number): Observable<CheatsheetsResponse> {
+    const params = moduleId ? `?module_id=${moduleId}` : '';
     return this.http
-      .get<CheatsheetsResponse>(`${this.baseUrl}/study/cheatsheets`)
+      .get<CheatsheetsResponse>(`${this.baseUrl}/study/cheatsheets${params}`)
       .pipe(
         timeout(this.CHEATSHEETS_TIMEOUT_MS),
         retry({

@@ -22,6 +22,7 @@ import {
   TopicChartData,
   SessionChartData,
 } from '../../services/analytics.service';
+import { ModuleService } from '../../services/module.service';
 
 /**
  * AnalyticsDashboardComponent visualises user performance metrics.
@@ -59,6 +60,8 @@ export class AnalyticsDashboardComponent implements OnInit, OnDestroy {
   private readonly analyticsService = inject(AnalyticsService);
   private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
+  private readonly moduleService = inject(ModuleService);
+  private get moduleId(): number { return this.moduleService.getActiveModuleId() || 1; }
 
   // ── Component state ──────────────────────────────────────────────────────
 
@@ -156,7 +159,7 @@ export class AnalyticsDashboardComponent implements OnInit, OnDestroy {
     this.isLoading = true;
 
     this.analyticsService
-      .getAnalyticsChartData()
+      .getAnalyticsChartData(this.moduleId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {

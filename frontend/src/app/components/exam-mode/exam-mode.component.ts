@@ -16,6 +16,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { FormsModule } from '@angular/forms';
 
 import { environment } from '../../../environments/environment';
+import { ModuleService } from '../../services/module.service';
 
 interface ExamQuestion {
   question_id: number;
@@ -73,6 +74,9 @@ export class ExamModeComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroy$ = new Subject<void>();
+  private readonly moduleService = inject(ModuleService);
+  private get moduleId(): number { return this.moduleService.getActiveModuleId() || 1; }
+  get activeModule() { return this.moduleService.activeModule(); }
 
   viewState: ViewState = 'intro';
   errorMessage: string | null = null;
@@ -106,7 +110,7 @@ export class ExamModeComponent implements OnInit, OnDestroy {
     this.errorMessage = null;
     this.cdr.markForCheck();
 
-    this.http.post<ExamStartResponse>(`${environment.apiBaseUrl}/exam/start`, {})
+    this.http.post<ExamStartResponse>(`${environment.apiBaseUrl}/exam/start`, { module_id: this.moduleId })
       .subscribe({
         next: (res) => {
           this.exam = res.exam;

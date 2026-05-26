@@ -29,33 +29,25 @@ class QuestionEngine:
     def get_next_question(self, session_id: str, difficulty_level: int) -> Optional[Question]:
         """
         Returns next unanswered question for session at specified difficulty.
-        
-        Args:
-            session_id: UUID of the current session
-            difficulty_level: Target difficulty level (1-5)
-        
-        Returns:
-            Question object if available, None if no questions available
-        
-        Requirements: 1.1, 1.3, 1.4, 2.6
+        Scoped to the session's module.
         """
-        # Get session to access answered questions
         session = Session.query.get(session_id)
         if not session:
             return None
         
         answered_ids = session.answered_question_ids or []
+        module_id = session.module_id
         
-        # Query for active questions at target difficulty, excluding answered ones
+        # Query for active questions at target difficulty in this module
         query = Question.query.filter(
             and_(
                 Question.is_active == True,
+                Question.module_id == module_id,
                 Question.difficulty_level == difficulty_level,
                 ~Question.question_id.in_(answered_ids) if answered_ids else True
             )
         )
         
-        # Get all matching questions and select randomly
         questions = query.all()
         
         if questions:
@@ -128,37 +120,24 @@ class QuestionEngine:
     def get_closest_difficulty_question(self, session_id: str, target_difficulty: int) -> Optional[Question]:
         """
         Finds question when exact difficulty unavailable.
-        
-        Searches for questions at closest available difficulty level by checking
-        levels in order: target±1, target±2, etc.
-        
-        Args:
-            session_id: UUID of the current session
-            target_difficulty: Target difficulty level (1-5)
-        
-        Returns:
-            Question object at closest available difficulty, None if no questions available
-        
-        Requirements: 2.6
+        Scoped to the session's module.
         """
         session = Session.query.get(session_id)
         if not session:
             return None
         
         answered_ids = session.answered_question_ids or []
+        module_id = session.module_id
         
-        # Try difficulty levels in order of proximity: ±1, ±2, ±3, ±4
         for offset in range(1, 5):
-            # Try both directions at this offset
             for difficulty in [target_difficulty + offset, target_difficulty - offset]:
-                # Skip if out of valid range (1-5)
                 if difficulty < 1 or difficulty > 5:
                     continue
                 
-                # Query for questions at this difficulty
                 query = Question.query.filter(
                     and_(
                         Question.is_active == True,
+                        Question.module_id == module_id,
                         Question.difficulty_level == difficulty,
                         ~Question.question_id.in_(answered_ids) if answered_ids else True
                     )
@@ -168,5 +147,4 @@ class QuestionEngine:
                 if questions:
                     return random.choice(questions)
         
-        # No unanswered questions available at any difficulty
         return None

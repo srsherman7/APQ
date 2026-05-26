@@ -30,15 +30,16 @@ class SessionManager:
     """
     
     @staticmethod
-    def create_session(user_id: int) -> Optional[Session]:
+    def create_session(user_id: int, module_id: int = 1) -> Optional[Session]:
         """
-        Create a new session for the specified user.
+        Create a new session for the specified user and module.
         
-        Deactivates any existing active sessions for the user to ensure
-        only one active session exists at a time.
+        Deactivates any existing active sessions for the user in this module
+        to ensure only one active session exists per module at a time.
         
         Args:
             user_id: The ID of the user to create a session for
+            module_id: The module to create the session in (default 1)
             
         Returns:
             Session object if successful, None if user doesn't exist
@@ -54,13 +55,14 @@ class SessionManager:
         if not user:
             return None
         
-        # Deactivate any existing active sessions for this user
-        Session.query.filter_by(user_id=user_id, is_active=True).update({'is_active': False})
+        # Deactivate any existing active sessions for this user in this module
+        Session.query.filter_by(user_id=user_id, module_id=module_id, is_active=True).update({'is_active': False})
         
         # Create new session with UUID
         session = Session(
             session_id=str(uuid.uuid4()),
             user_id=user_id,
+            module_id=module_id,
             answered_question_ids=[],
             current_difficulty_level=2,  # Starting difficulty
             current_performance_score=0.0,
@@ -146,31 +148,25 @@ class SessionManager:
         return False
     
     @staticmethod
-    def restore_session(user_id: int) -> Optional[Session]:
+    def restore_session(user_id: int, module_id: int = None) -> Optional[Session]:
         """
-        Restore the most recent active session for the user.
-        
-        Loads the user's active session if one exists. If multiple active
-        sessions exist (shouldn't happen), returns the most recently updated one.
+        Restore the most recent active session for the user, optionally scoped to a module.
         
         Args:
             user_id: The ID of the user to restore session for
+            module_id: Optional module ID to scope the restore
             
         Returns:
             Session object if found, None if no active session exists
-            
-        Raises:
-            ValueError: If user_id is invalid
         """
         if not isinstance(user_id, int) or user_id <= 0:
             raise ValueError("user_id must be a positive integer")
         
-        # Query for most recent active session
-        session = Session.query.filter_by(
-            user_id=user_id,
-            is_active=True
-        ).order_by(Session.updated_at.desc()).first()
+        query = Session.query.filter_by(user_id=user_id, is_active=True)
+        if module_id:
+            query = query.filter_by(module_id=module_id)
         
+        session = query.order_by(Session.updated_at.desc()).first()
         return session
     
     @staticmethod

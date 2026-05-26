@@ -116,9 +116,9 @@ export class SessionService {
    *
    * Requirements: 4.5, 4.7
    */
-  createSession(): Observable<SessionState> {
+  createSession(moduleId?: number): Observable<SessionState> {
     return this.http
-      .post<CreateSessionResponse>(`${this.apiUrl}/new`, {})
+      .post<CreateSessionResponse>(`${this.apiUrl}/new`, { module_id: moduleId || 1 })
       .pipe(
         timeout(REQUEST_TIMEOUT_MS),
         retry({ count: MAX_RETRY_ATTEMPTS, delay: 1000 }),
@@ -180,9 +180,10 @@ export class SessionService {
    *
    * Requirements: 4.4, 12.4
    */
-  restoreSession(): Observable<SessionState> {
+  restoreSession(moduleId?: number): Observable<SessionState> {
+    const params = moduleId ? `?module_id=${moduleId}` : '';
     return this.http
-      .get<RestoreSessionResponse>(`${this.apiUrl}/restore`)
+      .get<RestoreSessionResponse>(`${this.apiUrl}/restore${params}`)
       .pipe(
         timeout(REQUEST_TIMEOUT_MS),
         tap(response => {
