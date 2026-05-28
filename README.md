@@ -63,7 +63,6 @@ This application is architected as a general-purpose adaptive learning system. T
 - **Reset progress** — clear all history per-user from Settings (profile menu)
 - **Session persistence** — progress saves automatically; resume where you left off
 - **Single-port deployment** — Flask serves both the API and Angular production build on port 4201
-- **Turso database support** — optional remote libSQL for cloud deployments (falls back to local SQLite)
 - **LAN/external access** — auto-detects network IP; works through DDNS with port forwarding
 - **Render.com ready** — includes `build.sh` for one-click cloud deployment
 - **Responsive UI** — works on desktop, tablet, and mobile (375px+)
@@ -93,7 +92,7 @@ Each module has:
 |---|---|
 | Frontend | Angular 19, Angular Material 19, RxJS 7.8, TypeScript 5.7 |
 | Backend | Python 3.10+, Flask 3.0, SQLAlchemy 2.0, Flask-Login 0.6 |
-| Database | SQLite (local) / Turso libSQL (cloud) / PostgreSQL (production) |
+| Database | SQLite (local) / PostgreSQL (production) |
 | Auth | bcrypt password hashing, Bearer token sessions |
 | Deployment | Single process — Flask serves API + static Angular build |
 
@@ -111,7 +110,7 @@ APQ/
 │
 ├── backend/
 │   ├── app.py                  # Flask app factory (serves API + Angular static files)
-│   ├── config.py               # Configuration with Turso/SQLite/PostgreSQL support
+│   ├── config.py               # Configuration with SQLite/PostgreSQL support
 │   ├── extensions.py           # SQLAlchemy + Flask-Login instances
 │   ├── requirements.txt
 │   ├── .env.example
@@ -286,9 +285,7 @@ Single port (4201). For LAN/internet access:
 | Variable | Default | Description |
 |---|---|---|
 | `SECRET_KEY` | dev key | Flask secret — **change in production** |
-| `DATABASE_URI` | `sqlite:///aws_exam_practice.db` | Local SQLite fallback |
-| `TURSO_DATABASE_URL` | *(empty)* | Turso libSQL URL for cloud DB |
-| `TURSO_AUTH_TOKEN` | *(empty)* | Turso auth token |
+| `DATABASE_URI` | `sqlite:///aws_exam_practice.db` | SQLite default; use PostgreSQL URI for production |
 | `CORS_ORIGINS` | `http://localhost:4201` | Allowed origins |
 | `PORT` | `4201` | Server port (Render sets this) |
 
@@ -427,7 +424,7 @@ Study guides and cheatsheets are stored in the module's `study_content` database
 ## Production Notes
 
 1. **Secret key** — set a strong random `SECRET_KEY`
-2. **Database** — use Turso (`TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`) or PostgreSQL (`DATABASE_URI`)
+2. **Database** — use PostgreSQL (`DATABASE_URI`) for production
 3. **HTTPS** — set `SESSION_COOKIE_SECURE=True` behind a reverse proxy
 4. **WSGI** — `gunicorn -w 4 -b 0.0.0.0:$PORT "app:create_app()"`
 5. **Render.com** — Build: `chmod +x build.sh && ./build.sh` / Start: `cd backend && gunicorn "app:create_app()" --bind 0.0.0.0:$PORT`
@@ -488,7 +485,6 @@ Study guides and cheatsheets are stored in the module's `study_content` database
 - AWS Cloud Practitioner module with 472 questions
 - Adaptive difficulty, drill mode, exam mode, study materials
 - Single-port Flask deployment serving Angular production build
-- Turso database support for cloud deployments
 - LAN/external access with auto-detected IP
 - Reset progress, session persistence, responsive UI
 
