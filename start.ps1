@@ -177,6 +177,48 @@ with app.app_context():
         db.session.commit()
         if ml_count > 0:
             print(f'  Seeded {ml_count} ML questions')
+    
+    # Create Developer Associate module if it doesn't exist
+    dva_module = Module.query.filter_by(slug='developer-associate').first()
+    if not dva_module:
+        dva_module = Module(
+            slug='developer-associate',
+            name='AWS Developer Associate',
+            description='Prepare for the AWS Certified Developer - Associate exam. Covers development with AWS services, security, deployment, and troubleshooting.',
+            icon='code',
+            exam_question_count=65,
+            exam_time_limit_seconds=7800,
+            exam_passing_score=72.0,
+            topic_areas=['Development with AWS Services', 'Security', 'Deployment', 'Troubleshooting and Optimization'],
+        )
+        db.session.add(dva_module)
+        db.session.commit()
+        print(f'  Created module: {dva_module.name}')
+    
+    # Seed DVA questions
+    dva_seed = _os.path.join(r'$Backend', 'seed_data', 'dva_questions.json')
+    if _os.path.exists(dva_seed):
+        with open(dva_seed, encoding='utf-8') as f:
+            dva_qs = json.load(f)
+        dva_count = 0
+        for q in dva_qs:
+            if not Question.query.filter_by(question_text=q['question_text']).first():
+                db.session.add(Question(
+                    module_id=dva_module.module_id,
+                    question_text=q['question_text'],
+                    options=q['options'],
+                    correct_answer=q['correct_answer'],
+                    explanation=q['explanation'],
+                    memory_technique=q['memory_technique'],
+                    topic_area=q['topic_area'],
+                    difficulty_level=q['difficulty_level'],
+                    it_context_mapping=q.get('it_context_mapping'),
+                    is_active=True
+                ))
+                dva_count += 1
+        db.session.commit()
+        if dva_count > 0:
+            print(f'  Seeded {dva_count} DVA questions')
 "@
 python -c $InitScript
 if ($LASTEXITCODE -ne 0) {

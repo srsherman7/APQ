@@ -172,6 +172,43 @@ class StudyGuideGenerator:
             topic_area='ML Implementation and Operations',
             description='Complete guide to SageMaker services: training, inference, monitoring, and automation'
         ),
+        # Developer Associate cheatsheets
+        Cheatsheet(
+            id='dva-serverless-development',
+            title='Serverless Development',
+            topic_area='Development with AWS Services',
+            description='Lambda, API Gateway, DynamoDB, Step Functions, and event-driven architecture patterns'
+        ),
+        Cheatsheet(
+            id='dva-security-best-practices',
+            title='Developer Security Best Practices',
+            topic_area='Security',
+            description='IAM roles, Secrets Manager, KMS encryption, Cognito auth, and secure coding on AWS'
+        ),
+        Cheatsheet(
+            id='dva-cicd-deployment',
+            title='CI/CD & Deployment',
+            topic_area='Deployment',
+            description='CodePipeline, CodeBuild, CodeDeploy, SAM, CloudFormation, and deployment strategies'
+        ),
+        Cheatsheet(
+            id='dva-troubleshooting',
+            title='Troubleshooting & Optimization',
+            topic_area='Troubleshooting and Optimization',
+            description='X-Ray tracing, CloudWatch monitoring, Lambda performance tuning, and caching strategies'
+        ),
+        Cheatsheet(
+            id='dva-messaging-integration',
+            title='Messaging & Integration',
+            topic_area='Development with AWS Services',
+            description='SQS, SNS, EventBridge, Kinesis, and decoupled architecture patterns'
+        ),
+        Cheatsheet(
+            id='dva-containers-elastic-beanstalk',
+            title='Containers & Elastic Beanstalk',
+            topic_area='Deployment',
+            description='ECS, Fargate, ECR, Elastic Beanstalk environments, and container deployment patterns'
+        ),
     ]
     
     # Study guide content templates by topic area
@@ -618,6 +655,98 @@ class StudyGuideGenerator:
                 ComparisonRow(it_concept='Flask/FastAPI for model serving', aws_service='SageMaker Real-Time Endpoints', key_difference='SageMaker handles auto-scaling, load balancing, health checks, and A/B testing — no infrastructure code needed'),
                 ComparisonRow(it_concept='Manual model retraining', aws_service='SageMaker Pipelines + EventBridge', key_difference='Pipelines automate the entire retrain-evaluate-deploy workflow on schedule or trigger'),
                 ComparisonRow(it_concept='Custom monitoring dashboards', aws_service='SageMaker Model Monitor', key_difference='Model Monitor provides automated statistical drift detection with configurable alerts — no custom code'),
+            ]
+        },
+        'Development with AWS Services': {
+            'service_definitions': [
+                ServiceDefinition(name='AWS Lambda', description='Serverless compute service that runs code in response to events without provisioning or managing servers', key_features=['Event-driven execution from 100+ AWS service triggers', '15-minute maximum timeout per invocation', 'Automatic scaling to thousands of concurrent executions', 'Pay only for compute time consumed (per-ms billing)']),
+                ServiceDefinition(name='Amazon API Gateway', description='Fully managed service for creating, publishing, and managing RESTful and WebSocket APIs at any scale', key_features=['REST and WebSocket API support', 'Built-in throttling, caching, and authorization', 'Stage management for dev/staging/prod', 'Direct integration with Lambda, DynamoDB, and Step Functions']),
+                ServiceDefinition(name='Amazon DynamoDB', description='Serverless NoSQL database providing single-digit millisecond latency at any scale with flexible key-value and document data models', key_features=['Single-digit millisecond reads and writes', 'DynamoDB Streams for change data capture', 'Global tables for multi-region replication', 'On-demand and provisioned capacity modes']),
+                ServiceDefinition(name='AWS Step Functions', description='Serverless orchestration service for coordinating multiple AWS services into workflows with state management', key_features=['Visual workflow builder with state machines', 'Built-in error handling and retry logic', 'Standard (long-running) and Express (high-volume) workflows', 'Direct integration with 200+ AWS services']),
+            ],
+            'use_cases': [
+                UseCase(title='Serverless REST API', description='Build a fully serverless API with authentication, business logic, and data persistence', services=['API Gateway', 'Lambda', 'DynamoDB', 'Cognito']),
+                UseCase(title='Event-Driven Processing', description='Process events asynchronously using decoupled, scalable architecture', services=['SQS', 'SNS', 'Lambda', 'EventBridge']),
+                UseCase(title='Multi-Step Workflow Orchestration', description='Coordinate complex business processes with error handling and parallel execution', services=['Step Functions', 'Lambda', 'SQS', 'DynamoDB']),
+            ],
+            'exam_scenarios': [
+                ExamScenario(scenario='A developer needs to build an API that handles unpredictable traffic spikes from 0 to 10,000 requests/second', correct_approach='Use API Gateway with Lambda backend — both scale automatically with no capacity planning', why_it_works='API Gateway and Lambda scale independently to handle traffic spikes. No servers to provision or manage. Pay only for actual requests processed.'),
+                ExamScenario(scenario='A Lambda function needs to process messages from an SQS queue but occasionally fails on certain messages', correct_approach='Configure a Dead Letter Queue (DLQ) on the SQS source queue and set maxReceiveCount for redrive policy', why_it_works='The DLQ captures failed messages after the configured retry count, preventing poison messages from blocking the queue while preserving them for investigation'),
+            ],
+            'comparison_table': [
+                ComparisonRow(it_concept='Always-on application servers', aws_service='AWS Lambda', key_difference='Lambda runs only when triggered — no idle cost, automatic scaling, no server management'),
+                ComparisonRow(it_concept='Self-managed API gateway (nginx/Express)', aws_service='Amazon API Gateway', key_difference='API Gateway handles auth, throttling, caching, and versioning as managed infrastructure'),
+                ComparisonRow(it_concept='Self-managed MongoDB/Redis', aws_service='Amazon DynamoDB', key_difference='DynamoDB is serverless with automatic scaling, built-in replication, and no operational overhead'),
+                ComparisonRow(it_concept='Custom workflow engines (Airflow)', aws_service='AWS Step Functions', key_difference='Step Functions is serverless with visual workflows, built-in error handling, and direct AWS service integration'),
+            ]
+        },
+        'Security': {
+            'service_definitions': [
+                ServiceDefinition(name='AWS Secrets Manager', description='Service for securely storing, rotating, and retrieving database credentials, API keys, and other secrets', key_features=['Automatic secret rotation with Lambda', 'Fine-grained IAM access control', 'Encryption at rest with KMS', 'Cross-account secret sharing']),
+                ServiceDefinition(name='Amazon Cognito', description='User authentication and authorization service providing user pools for sign-up/sign-in and identity pools for AWS credential vending', key_features=['User Pools for authentication (username/password, social, SAML)', 'Identity Pools for temporary AWS credentials', 'Built-in MFA and adaptive authentication', 'JWT token-based authorization with API Gateway']),
+                ServiceDefinition(name='AWS IAM Roles', description='Secure way to grant permissions to AWS services and applications without long-term credentials', key_features=['Temporary credentials via STS AssumeRole', 'Cross-account access without sharing keys', 'Service-linked roles for AWS service permissions', 'Instance profiles for EC2 applications']),
+                ServiceDefinition(name='AWS KMS (Key Management Service)', description='Managed service for creating and controlling encryption keys used to protect application data', key_features=['Symmetric and asymmetric key support', 'Envelope encryption for large data', 'Key policies for fine-grained access control', 'Automatic key rotation']),
+            ],
+            'use_cases': [
+                UseCase(title='Secure Serverless Authentication', description='Add user sign-up, sign-in, and API authorization to a serverless application', services=['Cognito User Pools', 'API Gateway Authorizers', 'Lambda', 'IAM Roles']),
+                UseCase(title='Secret Management for Microservices', description='Centrally manage and rotate credentials used by multiple services', services=['Secrets Manager', 'Lambda rotation functions', 'IAM Roles', 'KMS']),
+                UseCase(title='Encryption at Rest and in Transit', description='Protect sensitive data throughout its lifecycle using managed encryption', services=['KMS', 'S3 SSE', 'DynamoDB encryption', 'ACM for TLS']),
+            ],
+            'exam_scenarios': [
+                ExamScenario(scenario='A Lambda function needs to access an RDS database but credentials should not be in code or environment variables', correct_approach='Store credentials in Secrets Manager, grant the Lambda execution role permission to read the secret, retrieve at runtime', why_it_works='Secrets Manager encrypts credentials with KMS, supports automatic rotation, and IAM controls who can access them — no secrets in code or config files'),
+                ExamScenario(scenario='A mobile app needs temporary AWS credentials to upload files directly to S3', correct_approach='Use Cognito Identity Pools to vend temporary, scoped AWS credentials to authenticated users', why_it_works='Identity Pools issue temporary STS credentials scoped to specific S3 prefixes — credentials auto-expire and follow least privilege'),
+            ],
+            'comparison_table': [
+                ComparisonRow(it_concept='Passwords in config files', aws_service='AWS Secrets Manager', key_difference='Secrets Manager encrypts, rotates, and audits access — no plaintext credentials anywhere'),
+                ComparisonRow(it_concept='Custom auth system (Passport.js)', aws_service='Amazon Cognito', key_difference='Cognito provides managed auth with MFA, social login, and JWT tokens — no custom auth code'),
+                ComparisonRow(it_concept='Long-lived API keys', aws_service='IAM Roles + STS', key_difference='Roles provide temporary credentials that auto-expire — no key rotation needed'),
+                ComparisonRow(it_concept='Manual key management', aws_service='AWS KMS', key_difference='KMS manages key lifecycle, rotation, and access control — FIPS 140-2 validated'),
+            ]
+        },
+        'Deployment': {
+            'service_definitions': [
+                ServiceDefinition(name='AWS CodePipeline', description='Fully managed CI/CD service that orchestrates build, test, and deploy phases for fast and reliable application updates', key_features=['Visual pipeline editor with stage/action model', 'Integration with CodeCommit, GitHub, S3 sources', 'Parallel and sequential action execution', 'Manual approval gates for production deployments']),
+                ServiceDefinition(name='AWS CodeBuild', description='Fully managed build service that compiles source code, runs tests, and produces deployment artifacts', key_features=['Managed build environments (no build servers)', 'Custom Docker images for build environments', 'buildspec.yml for build configuration as code', 'Caching for faster builds']),
+                ServiceDefinition(name='AWS CodeDeploy', description='Automated deployment service for EC2, Lambda, and ECS with rollback capabilities', key_features=['In-place and blue/green deployment strategies', 'Automatic rollback on failure or CloudWatch alarms', 'Traffic shifting for Lambda (canary, linear, all-at-once)', 'appspec.yml for deployment lifecycle hooks']),
+                ServiceDefinition(name='AWS SAM (Serverless Application Model)', description='Framework for building serverless applications with simplified CloudFormation syntax and local testing', key_features=['Shorthand syntax for Lambda, API Gateway, DynamoDB', 'sam local for local testing and debugging', 'sam deploy for CloudFormation-based deployments', 'Built-in best practices (IAM policies, tracing)']),
+            ],
+            'use_cases': [
+                UseCase(title='Serverless CI/CD Pipeline', description='Automate testing and deployment of serverless applications with zero-downtime updates', services=['CodePipeline', 'CodeBuild', 'SAM', 'CloudFormation']),
+                UseCase(title='Blue/Green Deployment', description='Deploy new application versions with zero downtime and instant rollback capability', services=['CodeDeploy', 'Elastic Beanstalk', 'Route 53', 'ALB']),
+                UseCase(title='Infrastructure as Code', description='Define and provision all infrastructure through version-controlled templates', services=['CloudFormation', 'SAM', 'CDK', 'CodePipeline']),
+            ],
+            'exam_scenarios': [
+                ExamScenario(scenario='A team needs to deploy Lambda function updates with the ability to gradually shift traffic and roll back on errors', correct_approach='Use CodeDeploy with Lambda traffic shifting — canary deployment shifts 10% traffic first, then 100% after validation', why_it_works='Canary deployments limit blast radius. CodeDeploy monitors CloudWatch alarms during shifting and automatically rolls back if errors spike'),
+                ExamScenario(scenario='A developer needs to test a SAM application locally before deploying to AWS', correct_approach='Use sam local invoke for individual functions and sam local start-api for the full API — both simulate the Lambda environment locally', why_it_works='SAM CLI creates a local Docker container matching the Lambda runtime, allowing realistic testing without deploying to AWS'),
+            ],
+            'comparison_table': [
+                ComparisonRow(it_concept='Jenkins CI server', aws_service='AWS CodeBuild + CodePipeline', key_difference='CodeBuild is serverless — no build servers to manage, patch, or scale. CodePipeline orchestrates the full workflow'),
+                ComparisonRow(it_concept='Manual deployment scripts', aws_service='AWS CodeDeploy', key_difference='CodeDeploy automates rollouts with health checks, traffic shifting, and automatic rollback on failure'),
+                ComparisonRow(it_concept='Manual infrastructure provisioning', aws_service='AWS CloudFormation / SAM', key_difference='Infrastructure as code enables repeatable, version-controlled deployments with drift detection'),
+                ComparisonRow(it_concept='Docker Compose for local dev', aws_service='SAM CLI (sam local)', key_difference='SAM CLI simulates the actual Lambda runtime locally — closer to production than generic containers'),
+            ]
+        },
+        'Troubleshooting and Optimization': {
+            'service_definitions': [
+                ServiceDefinition(name='AWS X-Ray', description='Distributed tracing service for analysing and debugging requests as they flow through distributed applications', key_features=['End-to-end request tracing across services', 'Service map showing latency and error rates', 'Annotations and metadata for filtering traces', 'Integration with Lambda, API Gateway, ECS, and EC2']),
+                ServiceDefinition(name='Amazon CloudWatch', description='Monitoring and observability service providing metrics, logs, alarms, and dashboards for AWS resources and applications', key_features=['Custom metrics and high-resolution monitoring', 'CloudWatch Logs with filter patterns and Insights', 'Alarms with auto-scaling and SNS actions', 'Embedded Metric Format for structured log metrics']),
+                ServiceDefinition(name='AWS CloudTrail', description='Service that records API calls and account activity for governance, compliance, and operational auditing', key_features=['Records all AWS API calls with caller identity', 'Management events and data events', 'Multi-region and organization-wide trails', 'Integration with CloudWatch Logs and EventBridge']),
+                ServiceDefinition(name='Lambda Power Tuning', description='Open-source tool for optimising Lambda function memory and performance by testing multiple configurations', key_features=['Tests function at multiple memory settings', 'Measures duration, cost, and performance', 'Visualises cost/performance tradeoffs', 'Step Functions-based execution']),
+            ],
+            'use_cases': [
+                UseCase(title='Distributed Tracing', description='Trace requests across microservices to identify latency bottlenecks and error sources', services=['X-Ray', 'Lambda', 'API Gateway', 'DynamoDB']),
+                UseCase(title='Proactive Monitoring', description='Set up alarms and dashboards to detect issues before they impact users', services=['CloudWatch Metrics', 'CloudWatch Alarms', 'SNS', 'Lambda']),
+                UseCase(title='Lambda Performance Optimization', description='Tune Lambda memory, concurrency, and cold starts for optimal cost/performance', services=['Lambda Power Tuning', 'CloudWatch Logs', 'X-Ray', 'Provisioned Concurrency']),
+            ],
+            'exam_scenarios': [
+                ExamScenario(scenario='A serverless application has intermittent latency spikes but the developer cannot identify which service is slow', correct_approach='Enable X-Ray tracing on Lambda and API Gateway, then analyse the service map and trace timeline to identify the slow segment', why_it_works='X-Ray traces each request across all services, showing exactly where time is spent. The service map highlights services with high latency or error rates'),
+                ExamScenario(scenario='A Lambda function has high cold start latency affecting user experience for a customer-facing API', correct_approach='Use Provisioned Concurrency to keep a minimum number of execution environments warm, eliminating cold starts for critical functions', why_it_works='Provisioned Concurrency pre-initialises execution environments so they respond immediately. Combined with auto-scaling, it handles traffic spikes without cold starts'),
+            ],
+            'comparison_table': [
+                ComparisonRow(it_concept='Jaeger/Zipkin distributed tracing', aws_service='AWS X-Ray', key_difference='X-Ray is fully managed with native AWS service integration — no tracing infrastructure to deploy or maintain'),
+                ComparisonRow(it_concept='Prometheus + Grafana monitoring', aws_service='Amazon CloudWatch', key_difference='CloudWatch is integrated with all AWS services out of the box — no exporters or scrapers needed'),
+                ComparisonRow(it_concept='Manual audit logs', aws_service='AWS CloudTrail', key_difference='CloudTrail automatically records all API activity with caller identity — immutable audit trail'),
+                ComparisonRow(it_concept='Manual performance testing', aws_service='Lambda Power Tuning', key_difference='Automated testing across memory configurations with cost/performance visualisation — data-driven optimisation'),
             ]
         },
     }

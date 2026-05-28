@@ -49,7 +49,7 @@ This application is architected as a general-purpose adaptive learning system. T
 ## Features
 
 - **Modular architecture** — each certification is an independent module with its own questions, exam format, study materials, and progress tracking
-- **892 total questions across 3 modules** — balanced answer options, shuffled positions
+- **1010 total questions across 3 modules** — balanced answer options, shuffled positions
 - **Timed exam mode** — simulates the real exam (question count, time limit, and passing score configured per module)
 - **Adaptive difficulty** — starts at level 2, adjusts ±1 per answer (range 1–5)
 - **Randomised options** — answer positions shuffled on every serve; distractors balanced in length
@@ -77,7 +77,7 @@ This application is architected as a general-purpose adaptive learning system. T
 |---|---|---|---|---|
 | AWS Cloud Practitioner | 472 | 65 questions / 90 min | 70% | 4 guides, 6 cheatsheets |
 | AWS Machine Learning Specialty | 285 | 85 questions / 170 min | 75% | 4 guides, 5 cheatsheets |
-| AWS Developer Associate | 135 | 65 questions / 130 min | 72% | 4 guides, 6 cheatsheets |
+| AWS Developer Associate | 257 | 65 questions / 130 min | 72% | 4 guides, 6 cheatsheets |
 
 Each module has:
 - Independent question pool across all difficulty levels (1–5)
@@ -442,11 +442,18 @@ Study guides and cheatsheets are stored in the module's `study_content` database
 - Changed `npx ng build` to `node node_modules\@angular\cli\bin\ng.js build` to invoke the Angular CLI directly, avoiding npx resolution delays and version mismatches
 - Added `$LASTEXITCODE = 0` reset before the Angular build to prevent stale exit codes from earlier steps causing false failures
 
+### AWS Developer Associate module — fully wired up
+
+- Added DVA module seeding block to `start.ps1` (creates module + loads 135 questions from `dva_questions.json` on fresh installs)
+- Added 6 DVA cheatsheets to `study_guide_generator.py` (serverless development, security best practices, CI/CD & deployment, troubleshooting, messaging & integration, containers & Elastic Beanstalk)
+- Added full study guide content for all 4 DVA topic areas: Development with AWS Services, Security, Deployment, Troubleshooting and Optimization
+- Module config: 65 questions / 130 minutes / 72% passing score, icon `code`, slug `developer-associate`
+
 ### v2.0 — Modular Architecture (Current Branch)
 
 **New Features:**
 - **Module system** — complete refactor from single-cert to multi-module architecture
-- **AWS Developer Associate module** — 135 questions, 4 study guides, 6 cheatsheets, 65q/130min/72% exam
+- **AWS Developer Associate module** — 257 questions, 4 study guides, 6 cheatsheets, 65q/130min/72% exam
 - **AWS Machine Learning Specialty module** — 285 questions, 4 study guides, 5 cheatsheets, 85q/170min/75% exam
 - **Module creation API** — `POST /api/modules/create` for creating custom modules without code changes
 - **Module import/export API** — `POST /api/modules/<slug>/import` and `GET /api/modules/<slug>/export`
