@@ -50,7 +50,7 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
 
 # ── 3. Install Python dependencies ───────────────────────────────────────────
 Write-Host "[1/5] Checking Python dependencies..." -ForegroundColor Yellow
-pip install -r (Join-Path $Backend "requirements.txt") -q
+python -m pip install -r (Join-Path $Backend "requirements.txt") -q
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] pip install failed." -ForegroundColor Red; exit 1
 }
@@ -71,7 +71,8 @@ if (-not (Test-Path $NodeModules)) {
 # ── 5. Build Angular for production ──────────────────────────────────────────
 Write-Host "[3/5] Building Angular (production)..." -ForegroundColor Yellow
 Push-Location $Frontend
-npx ng build --configuration production 2>&1 | Tee-Object -Variable buildOutput | Select-String -Pattern "error|complete|failed" -CaseSensitive:$false
+$LASTEXITCODE = 0
+node node_modules\@angular\cli\bin\ng.js build --configuration production 2>&1 | Tee-Object -Variable buildOutput | Select-String -Pattern "error|complete|failed" -CaseSensitive:$false
 Pop-Location
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Angular build failed." -ForegroundColor Red; exit 1
