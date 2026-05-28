@@ -436,6 +436,12 @@ Study guides and cheatsheets are stored in the module's `study_content` database
 
 ## Changelog
 
+### start.ps1 — Build reliability fixes
+
+- Changed `pip install -r ...` to `python -m pip install -r ...` to avoid PATH issues where `pip` resolves to the wrong Python installation
+- Changed `npx ng build` to `node node_modules\@angular\cli\bin\ng.js build` to invoke the Angular CLI directly, avoiding npx resolution delays and version mismatches
+- Added `$LASTEXITCODE = 0` reset before the Angular build to prevent stale exit codes from earlier steps causing false failures
+
 ### v2.0 — Modular Architecture (Current Branch)
 
 **New Features:**
