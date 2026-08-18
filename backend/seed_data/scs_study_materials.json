@@ -1,0 +1,417 @@
+{
+  "Incident Response": {
+    "overview": "Design and implement incident response strategies to detect, respond to, and recover from security events in AWS (12% of exam)",
+    "key_services": [
+      {
+        "name": "AWS CloudTrail",
+        "purpose": "Records AWS API calls for account activity and compliance auditing",
+        "key_features": [
+          "Logs all management and data events across AWS services",
+          "Delivers logs to S3 with optional encryption via KMS",
+          "Log file integrity validation using cryptographic hash",
+          "CloudTrail Insights detects unusual API activity automatically",
+          "Organization trails log events for all accounts in AWS Organizations"
+        ],
+        "exam_tips": [
+          "Enable multi-region trails for comprehensive coverage",
+          "Use log file validation for forensic investigations",
+          "CloudTrail doesn't log data plane events by default (S3 object reads, Lambda executions)",
+          "Organization trails simplify compliance for multi-account setups"
+        ]
+      },
+      {
+        "name": "Amazon GuardDuty",
+        "purpose": "Continuous threat detection service using ML to identify malicious activity",
+        "key_features": [
+          "Analyzes VPC Flow Logs, CloudTrail events, and DNS logs",
+          "Detects cryptocurrency mining, compromised credentials, reconnaissance",
+          "Machine learning identifies anomalies and known threats",
+          "Integrates with Security Hub and EventBridge for automation",
+          "No agents or sensors required"
+        ],
+        "exam_tips": [
+          "Enable in all regions for comprehensive threat detection",
+          "Use EventBridge to automate response to findings",
+          "Suppression rules filter false positives",
+          "Findings include severity, affected resources, and recommended actions"
+        ]
+      },
+      {
+        "name": "AWS Security Hub",
+        "purpose": "Centralized security and compliance service aggregating findings",
+        "key_features": [
+          "Aggregates findings from GuardDuty, Config, Macie, Inspector, IAM Access Analyzer",
+          "Runs automated compliance checks (CIS, PCI-DSS, AWS Foundational Security Best Practices)",
+          "Normalizes findings using AWS Security Finding Format (ASFF)",
+          "Custom insights and dashboards for security posture",
+          "Integrates with 50+ partner security tools"
+        ],
+        "exam_tips": [
+          "Requires AWS Config to be enabled for compliance checks",
+          "Use master-member model for multi-account aggregation",
+          "Custom actions trigger automated remediation workflows",
+          "Findings are automatically correlated across services"
+        ]
+      },
+      {
+        "name": "Amazon Detective",
+        "purpose": "Analyzes and visualizes security data for rapid investigation",
+        "key_features": [
+          "Automatically processes logs from CloudTrail, VPC Flow Logs, GuardDuty",
+          "Creates behavior graphs showing relationships between entities",
+          "Stores up to 1 year of historical data",
+          "ML-powered anomaly detection in user and resource behavior",
+          "Visualizes security event timelines and connections"
+        ],
+        "exam_tips": [
+          "Requires GuardDuty to be enabled",
+          "Use for root cause analysis after GuardDuty finding",
+          "Behavior graphs reveal patterns not visible in logs alone",
+          "Automatically identifies unusual API calls and network traffic"
+        ]
+      }
+    ],
+    "best_practices": [
+      "Enable CloudTrail in all regions with log file validation",
+      "Configure CloudWatch Events for real-time security alerts",
+      "Implement automated response using Lambda and Step Functions",
+      "Create incident response playbooks using Systems Manager Automation",
+      "Enable GuardDuty across all accounts and regions",
+      "Centralize findings in Security Hub for unified visibility",
+      "Use AWS Organizations for delegated security service administration",
+      "Implement least privilege access for incident responders",
+      "Regularly test incident response procedures with game days",
+      "Store forensic evidence in S3 with Object Lock for immutability"
+    ],
+    "common_scenarios": {
+      "compromised_credentials": "GuardDuty detects unusual API calls → EventBridge triggers Lambda → Lambda rotates credentials and revokes sessions → SNS notifies security team",
+      "malicious_instance": "GuardDuty flags communication with known bad IP → Lambda modifies security group to isolate instance → Systems Manager captures memory dump → SNS alerts team",
+      "data_exfiltration": "GuardDuty detects unusual data transfer → Lambda blocks S3 bucket public access → Detective used to investigate full attack path"
+    }
+  },
+  "Logging and Monitoring": {
+    "overview": "Implement comprehensive logging and monitoring solutions to maintain visibility into AWS resource activity and security posture (20% of exam)",
+    "key_services": [
+      {
+        "name": "Amazon CloudWatch",
+        "purpose": "Monitoring and observability service for AWS resources",
+        "key_features": [
+          "CloudWatch Logs for centralized log management",
+          "Metric filters extract metrics from logs",
+          "CloudWatch Alarms for threshold-based notifications",
+          "CloudWatch Insights for log query and analysis",
+          "EventBridge (CloudWatch Events) for event-driven workflows"
+        ],
+        "exam_tips": [
+          "Use metric filters on CloudTrail logs for security events",
+          "Logs Insights uses SQL-like query language",
+          "Export logs to S3 for long-term retention",
+          "Composite alarms combine multiple alarm states"
+        ]
+      },
+      {
+        "name": "VPC Flow Logs",
+        "purpose": "Captures IP traffic information for network interfaces",
+        "key_features": [
+          "Records accepted, rejected, or all traffic",
+          "Publishes to CloudWatch Logs or S3",
+          "Custom log format with specific fields",
+          "Can be enabled at VPC, subnet, or ENI level"
+        ],
+        "exam_tips": [
+          "Doesn't capture all traffic (DHCP, AWS metadata, Windows license)",
+          "Use Athena to query Flow Logs in S3",
+          "Analyze rejected traffic to identify security issues",
+          "Enable at VPC level for comprehensive coverage"
+        ]
+      },
+      {
+        "name": "AWS Config",
+        "purpose": "Tracks resource configurations and evaluates compliance",
+        "key_features": [
+          "Records configuration changes and history",
+          "Config rules check compliance continuously",
+          "Conformance packs group rules for standards",
+          "Remediation actions use Systems Manager Automation",
+          "Relationship tracking between resources"
+        ],
+        "exam_tips": [
+          "Required for Security Hub compliance checks",
+          "Aggregators collect data from multiple accounts/regions",
+          "Use managed rules for common compliance checks",
+          "Can trigger automatic remediation on drift"
+        ]
+      }
+    ],
+    "best_practices": [
+      "Enable CloudTrail in all regions with log file validation",
+      "Configure VPC Flow Logs for all VPCs",
+      "Use CloudWatch Logs encryption with KMS",
+      "Implement log retention policies balancing cost and compliance",
+      "Enable AWS Config in all accounts and regions",
+      "Use Config aggregators for multi-account visibility",
+      "Set up CloudWatch metric filters for critical security events",
+      "Use Athena for cost-effective log analysis at scale",
+      "Enable GuardDuty and Detective for enhanced threat detection",
+      "Centralize logs using S3 bucket policies or AWS Organizations"
+    ]
+  },
+  "Infrastructure Security": {
+    "overview": "Design and implement secure network architectures and infrastructure protection (26% of exam - largest domain)",
+    "key_services": [
+      {
+        "name": "Amazon VPC",
+        "purpose": "Isolated virtual network for launching AWS resources",
+        "key_features": [
+          "Security groups (stateful firewall at instance level)",
+          "Network ACLs (stateless firewall at subnet level)",
+          "VPC endpoints for private AWS service access",
+          "VPC peering and Transit Gateway for connectivity",
+          "Private and public subnets for network segmentation"
+        ],
+        "exam_tips": [
+          "Security groups are stateful; NACLs are stateless",
+          "Default NACL allows all; custom NACLs deny all by default",
+          "Security groups support only allow rules; NACLs support allow/deny",
+          "Use private subnets with VPC endpoints for zero internet exposure"
+        ]
+      },
+      {
+        "name": "AWS WAF",
+        "purpose": "Web application firewall protecting against common exploits",
+        "key_features": [
+          "Web ACLs with rules and rule groups",
+          "AWS Managed Rules auto-updated for threats",
+          "Rate-based rules for DDoS mitigation",
+          "Custom rules using match conditions",
+          "Integrates with CloudFront, ALB, API Gateway, AppSync"
+        ],
+        "exam_tips": [
+          "Operates at Layer 7 (application layer)",
+          "Use Count mode to test rules before blocking",
+          "Managed rule groups cover OWASP Top 10",
+          "Can log to S3, CloudWatch Logs, or Kinesis Firehose"
+        ]
+      },
+      {
+        "name": "AWS Shield",
+        "purpose": "Managed DDoS protection service",
+        "key_features": [
+          "Shield Standard: automatic network/transport layer protection (free)",
+          "Shield Advanced: enhanced DDoS protection with 24/7 DRT support",
+          "Cost protection prevents DDoS-related scaling charges",
+          "Real-time attack visibility and notifications",
+          "Integration with WAF for application layer protection"
+        ],
+        "exam_tips": [
+          "Shield Standard is automatic and free for all customers",
+          "Shield Advanced costs $3,000/month and includes WAF at no charge",
+          "DRT (DDoS Response Team) assists during attacks",
+          "Cost protection only with Shield Advanced"
+        ]
+      },
+      {
+        "name": "AWS Network Firewall",
+        "purpose": "Managed stateful network firewall for VPCs",
+        "key_features": [
+          "Stateful inspection using Suricata-compatible rules",
+          "IPS/IDS capabilities for threat detection",
+          "Domain filtering and URL categorization",
+          "TLS inspection for encrypted traffic",
+          "Centralized management with Firewall Manager"
+        ],
+        "exam_tips": [
+          "Operates at VPC level, unlike security groups (instance level)",
+          "Use for east-west traffic inspection between VPCs",
+          "Automatically scales with traffic",
+          "Deploy in inspection VPC with Transit Gateway"
+        ]
+      }
+    ],
+    "best_practices": [
+      "Implement defense in depth with multiple security layers",
+      "Use private subnets for sensitive workloads",
+      "Enable VPC Flow Logs for network traffic visibility",
+      "Use VPC endpoints to avoid internet traffic for AWS services",
+      "Enable WAF on all internet-facing applications",
+      "Use Shield Advanced for business-critical applications",
+      "Implement Network Firewall for advanced threat protection",
+      "Use PrivateLink for secure service-to-service communication",
+      "Regularly review security group rules for least privilege",
+      "Use Transit Gateway for centralized network inspection"
+    ]
+  },
+  "Identity and Access Management": {
+    "overview": "Design and implement comprehensive IAM solutions for authentication and authorization (20% of exam)",
+    "key_services": [
+      {
+        "name": "AWS IAM",
+        "purpose": "Identity and Access Management for secure AWS resource access",
+        "key_features": [
+          "Users, groups, and roles for identity management",
+          "Policies (identity-based and resource-based)",
+          "Permission boundaries limit maximum permissions",
+          "Service control policies (SCPs) in Organizations",
+          "IAM Access Analyzer identifies external access"
+        ],
+        "exam_tips": [
+          "Use roles instead of long-term credentials",
+          "Permission boundaries act as guardrails",
+          "SCPs affect all principals including root",
+          "Access Analyzer detects overly permissive access",
+          "Conditions add context-based access control"
+        ]
+      },
+      {
+        "name": "AWS Organizations",
+        "purpose": "Centrally manage multiple AWS accounts",
+        "key_features": [
+          "Organizational units (OUs) for account grouping",
+          "Service control policies for governance",
+          "Consolidated billing and cost allocation",
+          "Delegated administrator accounts",
+          "Policy inheritance through OU hierarchy"
+        ],
+        "exam_tips": [
+          "SCPs don't grant permissions, they limit them",
+          "Use separate accounts for workload isolation",
+          "Deny statements in SCPs always take precedence",
+          "Organization trails simplify multi-account logging"
+        ]
+      },
+      {
+        "name": "AWS IAM Identity Center (AWS SSO)",
+        "purpose": "Centralized single sign-on for multiple AWS accounts",
+        "key_features": [
+          "Built-in identity store or external identity provider",
+          "Permission sets for AWS account access",
+          "SAML 2.0 support for business applications",
+          "Integration with Active Directory",
+          "Automatic credential rotation"
+        ],
+        "exam_tips": [
+          "Eliminates individual IAM users in each account",
+          "Permission sets create roles in target accounts",
+          "Preferred method for human access to multiple accounts",
+          "Supports Azure AD, Okta, OneLogin, and others"
+        ]
+      },
+      {
+        "name": "Amazon Cognito",
+        "purpose": "User identity and authentication for web/mobile apps",
+        "key_features": [
+          "User pools for authentication and user management",
+          "Identity pools for AWS credential vending",
+          "Social login (Facebook, Google, Amazon, Apple)",
+          "SAML and OIDC federation",
+          "MFA and advanced security features"
+        ],
+        "exam_tips": [
+          "User pools authenticate; identity pools authorize",
+          "Identity pools provide temporary AWS credentials",
+          "Use for consumer-facing applications",
+          "Advanced security detects compromised credentials"
+        ]
+      }
+    ],
+    "best_practices": [
+      "Enable MFA for all human users",
+      "Use IAM roles instead of long-term access keys",
+      "Implement least privilege access principle",
+      "Use permission boundaries for delegated administration",
+      "Enable IAM Access Analyzer to identify external access",
+      "Rotate credentials regularly",
+      "Use AWS SSO for multi-account human access",
+      "Implement SCPs in Organizations for governance",
+      "Enable CloudTrail to log all IAM API calls",
+      "Use resource-based policies for cross-account access"
+    ]
+  },
+  "Data Protection": {
+    "overview": "Implement comprehensive data protection including encryption and key management (22% of exam)",
+    "key_services": [
+      {
+        "name": "AWS KMS",
+        "purpose": "Managed service for creating and controlling encryption keys",
+        "key_features": [
+          "Customer managed keys (CMKs) for encryption",
+          "Automatic key rotation for CMKs",
+          "Key policies and IAM policies for access control",
+          "Grants for temporary delegated access",
+          "CloudTrail logging of all key usage",
+          "FIPS 140-2 Level 2 validated HSMs"
+        ],
+        "exam_tips": [
+          "CMKs never leave KMS unencrypted",
+          "Use envelope encryption for large data",
+          "Key policies define who can use/manage keys",
+          "Grants provide temporary access without policy changes",
+          "Multi-region keys replicate across regions"
+        ]
+      },
+      {
+        "name": "AWS Secrets Manager",
+        "purpose": "Centrally manage secrets with automatic rotation",
+        "key_features": [
+          "Automatic rotation for RDS, Redshift, DocumentDB",
+          "Lambda functions for custom rotation logic",
+          "Version tracking with automatic rollback",
+          "Cross-account access via resource policies",
+          "Integration with CloudFormation and ECS"
+        ],
+        "exam_tips": [
+          "Automatically rotates and updates database passwords",
+          "More features than Parameter Store but costs more",
+          "Use Lambda for custom secret types",
+          "Resource policies enable cross-account access"
+        ]
+      },
+      {
+        "name": "Amazon Macie",
+        "purpose": "Data security service using ML to discover and protect sensitive data",
+        "key_features": [
+          "Automated discovery of PII in S3",
+          "ML-based data classification",
+          "Custom data identifiers for specific patterns",
+          "S3 bucket inventory and security analysis",
+          "Findings sent to Security Hub"
+        ],
+        "exam_tips": [
+          "Scans S3 buckets for sensitive data automatically",
+          "Uses managed and custom data identifiers",
+          "Helps meet PCI-DSS and GDPR requirements",
+          "Can be scheduled for regular scans"
+        ]
+      },
+      {
+        "name": "AWS Certificate Manager",
+        "purpose": "Provision and manage SSL/TLS certificates",
+        "key_features": [
+          "Free public certificates for AWS services",
+          "Automatic renewal and deployment",
+          "Integration with ALB, CloudFront, API Gateway",
+          "Private CA for internal certificates",
+          "Certificate transparency logging"
+        ],
+        "exam_tips": [
+          "Public ACM certificates cannot be exported",
+          "Private CA allows creating internal certificates",
+          "Automatic renewal eliminates manual management",
+          "Certificates are regional (except CloudFront)"
+        ]
+      }
+    ],
+    "best_practices": [
+      "Encrypt data at rest using KMS or CloudHSM",
+      "Enforce TLS for data in transit",
+      "Use Secrets Manager for credential management",
+      "Enable automatic key rotation for KMS keys",
+      "Use S3 Block Public Access at account level",
+      "Enable versioning and MFA Delete for critical buckets",
+      "Use Object Lock for compliance and immutability",
+      "Use Macie to discover and protect sensitive data",
+      "Implement ACM for certificate lifecycle management",
+      "Use CloudTrail to audit all key usage"
+    ]
+  }
+}

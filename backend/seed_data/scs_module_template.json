@@ -1,0 +1,13 @@
+{
+  "module": {
+    "name": "AWS Certified Security - Specialty",
+    "slug": "aws-security-specialty",
+    "description": "Prepare for the AWS Certified Security - Specialty (SCS-C02) exam covering incident response, logging, infrastructure security, identity management, and data protection",
+    "icon": "security",
+    "exam_question_count": 65,
+    "exam_time_limit_seconds": 10800,
+    "exam_passing_score": 75.0,
+    "topic_areas": ["Incident Response", "Logging and Monitoring", "Infrastructure Security", "Identity and Access Management", "Data Protection"]
+  },
+  "questions": []
+}
